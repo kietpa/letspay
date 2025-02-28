@@ -10,9 +10,20 @@ import (
 )
 
 func main() {
+	// config
 	cfg := config.InitConfig()
 
+	// logger
+	// redis & DB
 	db := config.InitDB()
+
+	// init repo with DB instance
+
+	// init providers
+	// provider mapper
+
+	// scheduler
+	// routing/handler\
 
 	url := cfg.Provider[constants.BRICK_PROVIDER_ID].BaseUrl + "/payments/auth/token"
 
