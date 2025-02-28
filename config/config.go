@@ -10,7 +10,7 @@ import (
 )
 
 func loadEnv() error {
-	err := godotenv.Load(".sandbox.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		return err
 	}
