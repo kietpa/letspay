@@ -1,0 +1,3 @@
+development:
+  driver: postgres
+  open: postgres://letsuser:letspassword@localhost:5372/letspay?sslmode=disable

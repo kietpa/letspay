@@ -1,18 +1,24 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:latest
-    container_name: postgres_container
+  db:
+    container_name: postgres
+    image: postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: letspay
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: letspay # creates DB with this name at init
+      POSTGRES_USER: letsuser # superuser (needs to match application.properties)
+      POSTGRES_PASSWORD: letspassword
+      PGDATA: /data/letspay
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
+      - db:/data/postgres
+    ports:
+      - "5372:5432"
+    networks:
+      - db
+    restart: unless-stopped
+
+networks:
+  db:
+    driver: bridge
 
 volumes:
-  postgres_data:
+  db:
+    driver: local
