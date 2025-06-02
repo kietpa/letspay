@@ -1,22 +1,12 @@
-# migration
-
-goose -dir migrations create create_users_table sql
-goose -dir migrations postgres "postgres://myuser:mypassword@localhost:5432/letspay" up -v
-goose -dir migrations postgres "postgres://myuser:mypassword@localhost:5432/letspay" down -v
-
-# commits
-
-setup DB config, goose migrations
-
 # tables
-
 user
 user_login
-disbursement_transactions
-    id
-    transaction_id unique
-    user_transaction_id
-    bank_code
+disbursement
 
-change agent to provider
-
+# how to start
+1. docker compose up -d
+2. run migrations:
+    goose -dir migrations postgres "user=letsuser password=letspassword dbname=letspay port=5372 sslmode=disable" up
+change port if needed
+3. add credentials in the env file (WIP)
+4. run the app (WIP)

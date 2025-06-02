@@ -2,18 +2,17 @@ package database
 
 import (
 	"context"
-	"sync"
+	"letspay/dto"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type (
-	DisbursementRepo struct {
-		db    *pgxpool.Pool
-		synch sync.Mutex
+	disbursementRepo struct {
+		db *pgxpool.Pool
 	}
 
-	Disbursement interface {
-		GetDisbursementTransaction(ctx context.Context, transactionId string)
+	DisbursementRepo interface {
+		GetDisbursement(ctx context.Context, transactionId string) (dto.Disbursement, error)
 	}
 )

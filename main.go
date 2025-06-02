@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"letspay/common/constants"
 	"letspay/config"
-	"letspay/util"
-	"net/http"
+	"letspay/controller/api"
+	"letspay/repository/database"
 )
 
 func main() {
@@ -18,28 +15,32 @@ func main() {
 	db := config.InitDB()
 
 	// init repo with DB instance
+	disbursementRepo := database.NewDisbursementRepo(db)
 
-	// init providers
+	// TODO: init providers (agents in test)
 	// provider mapper
 
 	// scheduler
-	// routing/handler\
+	// mssg queue
 
-	url := cfg.Provider[constants.BRICK_PROVIDER_ID].BaseUrl + "/payments/auth/token"
+	// routing/handler
+	api.HandleRequests(cfg, disbursementRepo)
 
-	req, _ := http.NewRequest("GET", url, nil)
+	// url := cfg.Provider[constants.BRICK_PROVIDER_ID].BaseUrl + "/payments/auth/token"
 
-	auth := util.Base64Encode(cfg.Provider[constants.BRICK_PROVIDER_ID].ClientId + ":" + cfg.Provider[constants.BRICK_PROVIDER_ID].ClientSecret)
+	// req, _ := http.NewRequest("GET", url, nil)
 
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("authorization", "Basic "+auth)
+	// auth := util.Base64Encode(cfg.Provider[constants.BRICK_PROVIDER_ID].ClientId + ":" + cfg.Provider[constants.BRICK_PROVIDER_ID].ClientSecret)
 
-	res, _ := http.DefaultClient.Do(req)
+	// req.Header.Add("accept", "application/json")
+	// req.Header.Add("authorization", "Basic "+auth)
 
-	defer res.Body.Close()
-	body, _ := io.ReadAll(res.Body)
+	// res, _ := http.DefaultClient.Do(req)
 
-	fmt.Println(string(body))
+	// defer res.Body.Close()
+	// body, _ := io.ReadAll(res.Body)
+
+	// fmt.Println(string(body))
 
 	db.Close()
 }
