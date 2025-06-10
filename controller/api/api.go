@@ -5,6 +5,8 @@ import (
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/usecase"
+	"log"
+	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -40,4 +42,7 @@ func HandleRequests(
 	)
 
 	router.HandleFunc(constants.DISBURSEMENT+"/{referenceId}", apiModule.GetDisbursement)
+
+	log.Println("API listening on port: " + cfg.Server.Port)
+	http.ListenAndServe(":"+cfg.Server.Port, router)
 }

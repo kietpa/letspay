@@ -20,8 +20,8 @@ func (r *disbursementRepo) GetDisbursement(ctx context.Context, transactionId st
 	user_id,
 	reference_id,
 	user_reference_id,
-	provider,
-	provider_response_id,
+	provider_id,
+	provider_reference_id,
 	status,
 	amount,
 	created_at,
@@ -29,10 +29,24 @@ func (r *disbursementRepo) GetDisbursement(ctx context.Context, transactionId st
 	bank_account_number,
 	bank_account_name,
 	description
-	FROM disbursements
+	FROM disbursement
 	where reference_id = $1`
 
-	err := r.db.QueryRow(context.Background(), query, transactionId).Scan(&resp)
+	err := r.db.QueryRow(context.Background(), query, transactionId).Scan(
+		&resp.Id,
+		&resp.UserId,
+		&resp.ReferenceId,
+		&resp.UserReferenceId,
+		&resp.ProviderId,
+		&resp.ProviderReferenceId,
+		&resp.Status,
+		&resp.Amount,
+		&resp.CreatedAt,
+		&resp.UpdatedAt,
+		&resp.BankAccountNumber,
+		&resp.BankAccountName,
+		&resp.Description,
+	)
 
 	return resp, err
 }

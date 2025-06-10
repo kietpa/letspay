@@ -1,3 +1,8 @@
+# Tech stack
+- Golang
+- Postgresql
+- gorilla/mux
+
 # tables
 user
 user_login
