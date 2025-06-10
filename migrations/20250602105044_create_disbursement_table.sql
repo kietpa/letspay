@@ -2,7 +2,7 @@
 CREATE TABLE disbursement (
     id SERIAL PRIMARY KEY,
     user_id int,
-    reference_id varchar(255),
+    reference_id varchar(255) UNIQUE,
     user_reference_id varchar(255),
     status varchar(30),
     provider_id int,

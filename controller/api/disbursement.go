@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"letspay/controller"
+	"letspay/model"
 	"letspay/usecase"
+	"net/http"
 )
 
 type disbursementAPI struct {
@@ -18,19 +20,16 @@ func NewDisbursementAPI(dibursementUC usecase.Disbursement) *disbursementAPI {
 
 func (a *disbursementAPI) GetDisbursement(
 	ctx context.Context, param map[string]string,
-) (controller.Data, error) {
+) (controller.Data, model.Error) {
 	response := controller.Data{}
 
-	disbursement, _ := a.disbursementUC.GetDisbursement(ctx, param["referenceId"])
-	// if err.Message != "" {
-	// 	log.Println("API error")
+	disbursement, err := a.disbursementUC.GetDisbursement(ctx, param["referenceId"])
+	if err.Code != 0 { // 0 = success
+		return controller.Data{}, err
+	}
 
-	// 	response.Status = err.Code
-
-	// 	return response, nil //TODO: change error to custom API error
-	// }
-
+	response.Status = http.StatusOK
 	response.Data = disbursement
 
-	return response, nil
+	return response, model.Error{}
 }
