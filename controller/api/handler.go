@@ -19,7 +19,7 @@ func (m *ApiModule) GetDisbursement(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		trxId := vars["referenceId"]
 		InputParams := make(map[string]string)
-		InputParams["referenceid"] = trxId
+		InputParams["referenceId"] = trxId
 		response, err = m.disbursementAPI.GetDisbursement(ctx, InputParams)
 		if err != nil {
 			respondWithError(w, http.StatusInternalServerError, "Internal Error")

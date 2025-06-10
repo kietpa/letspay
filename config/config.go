@@ -31,6 +31,10 @@ func InitConfig() model.AppConfig {
 	}
 
 	return model.AppConfig{
+		Server: model.Server{
+			Port:    "8080",
+			Timeout: 30,
+		},
 		Provider: map[int]model.Provider{
 			constants.BRICK_PROVIDER_ID: brickProvider,
 		},

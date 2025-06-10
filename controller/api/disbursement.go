@@ -21,5 +21,16 @@ func (a *disbursementAPI) GetDisbursement(
 ) (controller.Data, error) {
 	response := controller.Data{}
 
+	disbursement, _ := a.disbursementUC.GetDisbursement(ctx, param["referenceId"])
+	// if err.Message != "" {
+	// 	log.Println("API error")
+
+	// 	response.Status = err.Code
+
+	// 	return response, nil //TODO: change error to custom API error
+	// }
+
+	response.Data = disbursement
+
 	return response, nil
 }
