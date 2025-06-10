@@ -2,9 +2,10 @@ package usecase
 
 import (
 	"context"
+	"letspay/common/constants"
 	"letspay/model"
 	"letspay/repository/database"
-	"log"
+	"net/http"
 )
 
 func NewDisbursementUsecase(
@@ -20,8 +21,10 @@ func (u disbursementUsecase) GetDisbursement(
 ) (model.DisbursementDetail, model.Error) {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, refid)
 	if err != nil {
-		log.Println(err)
-		return model.DisbursementDetail{}, model.Error{}
+		return model.DisbursementDetail{}, model.Error{
+			Code:    http.StatusNotFound,
+			Message: constants.TRANSACTION_NOT_FOUND_MESSAGE,
+		}
 	}
 
 	return model.DisbursementDetail{
