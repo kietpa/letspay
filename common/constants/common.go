@@ -2,7 +2,7 @@ package constants
 
 const (
 	INVALID int = iota
-	BRICK_PROVIDER_ID
+	XENDIT_PROVIDER_ID
 )
 
 const (

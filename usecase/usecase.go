@@ -4,11 +4,13 @@ import (
 	"context"
 	"letspay/model"
 	"letspay/repository/database"
+	"letspay/repository/provider"
 )
 
 type (
 	disbursementUsecase struct {
 		disbursementRepo database.DisbursementRepo
+		providerRepo     map[int]provider.ProviderRepo
 	}
 
 	Disbursement interface {

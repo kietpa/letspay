@@ -5,6 +5,7 @@ import (
 	"letspay/common/constants"
 	"letspay/model"
 	"letspay/repository/database"
+	"letspay/repository/provider"
 	"log"
 	"net/http"
 	"time"
@@ -12,9 +13,11 @@ import (
 
 func NewDisbursementUsecase(
 	disbursementRepo database.DisbursementRepo,
+	providerRepo map[int]provider.ProviderRepo,
 ) Disbursement {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
+		providerRepo:     providerRepo,
 	}
 }
 
@@ -76,6 +79,7 @@ func (u disbursementUsecase) CreateDisbursement(
 	}
 
 	// TODO: execute disbursement to providers
+
 	// TODO: if transaction exceed timeout without final error status,
 	// respond to user with pending status
 	// TODO: add scheduler to check status to provider for pending transactions

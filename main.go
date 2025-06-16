@@ -1,9 +1,12 @@
 package main
 
 import (
+	"letspay/common/constants"
 	"letspay/config"
 	"letspay/controller/api"
 	"letspay/repository/database"
+	"letspay/repository/provider"
+	"letspay/repository/provider/xendit"
 )
 
 func main() {
@@ -19,28 +22,22 @@ func main() {
 
 	// TODO: init providers (agents in test)
 	// provider mapper
+	xenditRepo := xendit.NewProviderRepo(
+		xendit.NewProviderRepoInput{
+			Url:    cfg.Provider[constants.XENDIT_PROVIDER_ID].Url,
+			ApiKey: cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
+		},
+	)
+
+	providerRepo := map[int]provider.ProviderRepo{
+		constants.XENDIT_PROVIDER_ID: xenditRepo,
+	}
 
 	// scheduler
 	// mssg queue
 
 	// routing/handler
-	api.HandleRequests(cfg, disbursementRepo)
-
-	// url := cfg.Provider[constants.BRICK_PROVIDER_ID].BaseUrl + "/payments/auth/token"
-
-	// req, _ := http.NewRequest("GET", url, nil)
-
-	// auth := util.Base64Encode(cfg.Provider[constants.BRICK_PROVIDER_ID].ClientId + ":" + cfg.Provider[constants.BRICK_PROVIDER_ID].ClientSecret)
-
-	// req.Header.Add("accept", "application/json")
-	// req.Header.Add("authorization", "Basic "+auth)
-
-	// res, _ := http.DefaultClient.Do(req)
-
-	// defer res.Body.Close()
-	// body, _ := io.ReadAll(res.Body)
-
-	// fmt.Println(string(body))
+	api.HandleRequests(cfg, disbursementRepo, providerRepo)
 
 	db.Close()
 }
