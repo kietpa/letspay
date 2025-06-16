@@ -2,6 +2,7 @@ package api
 
 import (
 	"letspay/common/constants"
+	"letspay/controller"
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/usecase"
@@ -34,6 +35,8 @@ func HandleRequests(
 ) {
 	router := mux.NewRouter().StrictSlash(true)
 
+	router.Use(controller.LoggingMiddleware)
+
 	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo)
 
 	apiModule := NewAPI(
@@ -42,6 +45,7 @@ func HandleRequests(
 	)
 
 	router.HandleFunc(constants.DISBURSEMENT+"/{referenceId}", apiModule.GetDisbursement)
+	router.HandleFunc(constants.DISBURSEMENT, apiModule.CreateDisbursement)
 
 	log.Println("API listening on port: " + cfg.Server.Port)
 	http.ListenAndServe(":"+cfg.Server.Port, router)

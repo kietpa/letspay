@@ -13,5 +13,6 @@ type (
 
 	Disbursement interface {
 		GetDisbursement(ctx context.Context, refid string) (model.DisbursementDetail, model.Error)
+		CreateDisbursement(ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest) (model.DisbursementDetail, model.Error)
 	}
 )

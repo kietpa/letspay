@@ -11,9 +11,11 @@ type Disbursement struct {
 	ProviderReferenceId string    `db:"provider_reference_id"`
 	Status              string    `db:"status"`
 	Amount              float64   `db:"amount"`
+	BankCode            string    `db:"bank_code"`
 	CreatedAt           time.Time `db:"created_at"`
 	UpdatedAt           time.Time `db:"updated_at"`
 	BankAccountNumber   string    `db:"bank_account_number"`
 	BankAccountName     string    `db:"bank_account_name"`
 	Description         string    `db:"description"`
+	FailureCode         string    `db:"failure_code"`
 }
