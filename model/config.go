@@ -9,9 +9,9 @@ type (
 	}
 
 	Provider struct {
-		ClientId     string
-		ClientSecret string
-		BaseUrl      string
+		ClientId string
+		ApiKey   string
+		Url      string
 	}
 
 	Server struct {

@@ -24,10 +24,9 @@ func InitConfig() model.AppConfig {
 		panic(err)
 	}
 
-	brickProvider := model.Provider{
-		ClientId:     os.Getenv("BRICK_CLIENT_ID"),
-		ClientSecret: os.Getenv("BRICK_CLIENT_SECRET"),
-		BaseUrl:      os.Getenv("BRICK_BASE_URL"),
+	xenditProvider := model.Provider{
+		ClientId: os.Getenv("XENDIT_API_KEY"),
+		Url:      os.Getenv("BRICK_BASE_URL"),
 	}
 
 	return model.AppConfig{
@@ -36,7 +35,7 @@ func InitConfig() model.AppConfig {
 			Timeout: 30,
 		},
 		Provider: map[int]model.Provider{
-			constants.BRICK_PROVIDER_ID: brickProvider,
+			constants.XENDIT_PROVIDER_ID: xenditProvider,
 		},
 	}
 }

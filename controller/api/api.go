@@ -5,6 +5,7 @@ import (
 	"letspay/controller"
 	"letspay/model"
 	"letspay/repository/database"
+	"letspay/repository/provider"
 	"letspay/usecase"
 	"log"
 	"net/http"
@@ -32,12 +33,13 @@ func NewAPI(
 func HandleRequests(
 	cfg model.AppConfig,
 	disbursementRepo database.DisbursementRepo,
+	providerRepo map[int]provider.ProviderRepo,
 ) {
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.Use(controller.LoggingMiddleware)
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo)
+	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
 
 	apiModule := NewAPI(
 		cfg,

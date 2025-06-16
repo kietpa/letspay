@@ -1,9 +1,8 @@
 package provider
 
 type (
-	DisbursementProvider interface {
-		ValidateAccount()
-		CreateDisbursement()
+	ProviderRepo interface {
+		ExecuteDisbursement()
 		GetDisbursementStatus()
 	}
 )
