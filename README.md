@@ -2,11 +2,7 @@ Simple payment aggregator app that's still being worked on. Currently a monolith
 
 # Features
 - Disbursements using Xendit & Midtrans
-
-# Tech stack
-- Golang
-- Postgresql
-- gorilla/mux
+- Stack: Go, PostgreSQL, gorilla/mux, pgx
 
 # how to start
 1. docker compose up -d
@@ -17,8 +13,16 @@ change port if needed
 4. run the app (WIP)
 
 # To do
-- add api documentation & improve readme (table of contents, etc)
-- 
+- [ ] user system
+- [ ] Basic disbursement system
+- [ ] improved logging with grafana/elk
+- [ ] improved error handling
+- [ ] handle timeouts
+- [ ] handle race conditions
+- [ ] scheduler system to check & update status
+- [ ] improved validation
+- [ ] add api documentation & improve readme (table of contents, etc)
+
 
 # tables
 user

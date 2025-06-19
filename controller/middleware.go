@@ -1,11 +1,5 @@
 package controller
 
-import (
-	"log"
-	"net/http"
-	"time"
-)
-
 // simple middleware
 // func AuthMiddleware(next http.Handler) http.Handler {
 // 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -21,14 +15,14 @@ import (
 // 	})
 // }
 
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+// func LoggingMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		start := time.Now()
 
-		// Call the next handler
-		next.ServeHTTP(w, r)
+// 		// Call the next handler
+// 		next.ServeHTTP(w, r)
 
-		// Log after the request is processed
-		log.Printf("%s %s took %s", r.Method, r.RequestURI, time.Since(start))
-	})
-}
+// 		// Log after the request is processed
+// 		log.Printf("%s %s took %s", r.Method, r.RequestURI, time.Since(start))
+// 	})
+// }

@@ -101,3 +101,26 @@ func (r *disbursementRepo) CreateDisbursement(ctx context.Context, createDisburs
 
 	return err
 }
+
+func (r *disbursementRepo) UpdateDisbursement(
+	ctx context.Context, updateDisbursementInput model.UpdateDisbursementInput,
+) error {
+	query := `UPDATE disbursement
+	SET provider_id = $1,
+	provider_reference_id = $2,
+	status = $3,
+	updated_at = $4,
+	failure_code = $5
+	WHERE reference_id = $6`
+
+	_, err := r.db.Exec(ctx, query,
+		updateDisbursementInput.ProviderId,
+		updateDisbursementInput.ProviderReferenceId,
+		updateDisbursementInput.Status,
+		updateDisbursementInput.UpdatedAt,
+		updateDisbursementInput.FailureCode,
+		updateDisbursementInput.ReferenceId,
+	)
+
+	return err
+}

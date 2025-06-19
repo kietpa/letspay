@@ -24,8 +24,8 @@ func main() {
 	// provider mapper
 	xenditRepo := xendit.NewProviderRepo(
 		xendit.NewProviderRepoInput{
-			Url:    cfg.Provider[constants.XENDIT_PROVIDER_ID].Url,
-			ApiKey: cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
+			BaseUrl: cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
+			ApiKey:  cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
 		},
 	)
 
