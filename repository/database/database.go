@@ -14,7 +14,14 @@ type (
 	}
 
 	DisbursementRepo interface {
-		GetDisbursement(ctx context.Context, transactionId string) (dto.Disbursement, error)
-		CreateDisbursement(ctx context.Context, createDisbursementInput model.CreateDisbursementInput) error
+		GetDisbursement(
+			ctx context.Context, transactionId string,
+		) (dto.Disbursement, error)
+		CreateDisbursement(
+			ctx context.Context, createDisbursementInput model.CreateDisbursementInput,
+		) error
+		UpdateDisbursement(
+			ctx context.Context, updateDisbursementInput model.UpdateDisbursementInput,
+		) error
 	}
 )

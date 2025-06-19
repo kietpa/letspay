@@ -2,7 +2,6 @@ package api
 
 import (
 	"letspay/common/constants"
-	"letspay/controller"
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/repository/provider"
@@ -37,7 +36,7 @@ func HandleRequests(
 ) {
 	router := mux.NewRouter().StrictSlash(true)
 
-	router.Use(controller.LoggingMiddleware)
+	// router.Use(controller.LoggingMiddleware)
 
 	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
 

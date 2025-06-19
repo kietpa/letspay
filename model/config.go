@@ -11,7 +11,7 @@ type (
 	Provider struct {
 		ClientId string
 		ApiKey   string
-		Url      string
+		BaseUrl  string
 	}
 
 	Server struct {
