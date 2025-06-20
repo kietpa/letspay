@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -22,10 +23,11 @@ type (
 func NewAPI(
 	config model.AppConfig,
 	disbursementUC usecase.Disbursement,
+	validate validator.Validate,
 ) *ApiModule {
 	return &ApiModule{
 		config:          config,
-		disbursementAPI: NewDisbursementAPI(disbursementUC),
+		disbursementAPI: NewDisbursementAPI(disbursementUC, validate),
 	}
 }
 
@@ -34,6 +36,7 @@ func HandleRequests(
 	disbursementRepo database.DisbursementRepo,
 	providerRepo map[int]provider.ProviderRepo,
 ) {
+	validate := validator.New()
 	router := mux.NewRouter().StrictSlash(true)
 
 	// router.Use(controller.LoggingMiddleware)
@@ -43,6 +46,7 @@ func HandleRequests(
 	apiModule := NewAPI(
 		cfg,
 		disbursementUC,
+		*validate,
 	)
 
 	router.HandleFunc(constants.DISBURSEMENT+"/{referenceId}", apiModule.GetDisbursement)

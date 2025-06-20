@@ -1,7 +1,7 @@
-Simple payment aggregator app that's still being worked on. Currently a monolith, will be divided into a microservice later (for learning purposes).
+Simple payment aggregator app that's still being worked on. Currently a monolith, will be divided into a microservice later for learning purposes.
 
 # Features
-- Disbursements using Xendit & Midtrans
+- Disbursements using Xendit
 - Stack: Go, PostgreSQL, gorilla/mux, pgx
 
 # how to start
@@ -16,15 +16,8 @@ change port if needed
 - [ ] user system
 - [ ] Basic disbursement system
 - [ ] improved logging with grafana/elk
-- [ ] improved error handling
+- [ ] improved error handling & validation
 - [ ] handle timeouts
 - [ ] handle race conditions
 - [ ] scheduler system to check & update status
-- [ ] improved validation
 - [ ] add api documentation & improve readme (table of contents, etc)
-
-
-# tables
-user
-user_login
-disbursement

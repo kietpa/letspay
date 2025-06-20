@@ -56,7 +56,6 @@ func (u disbursementUsecase) GetDisbursement(
 func (u disbursementUsecase) CreateDisbursement(
 	ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest,
 ) (model.DisbursementDetail, model.Error) {
-	// TODO: add validation for amount, userrefid, bankcode
 
 	input := model.CreateDisbursementInput{
 		UserId:            123, // TODO: retrieve user id
