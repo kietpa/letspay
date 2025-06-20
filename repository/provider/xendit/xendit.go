@@ -90,11 +90,13 @@ func (p *providerRepo) ExecuteDisbursement(
 	respByte, statusCode, err := helper.SendRequest(cfg)
 	if err != nil {
 		fmt.Println(statusCode, "exec disb xendit resp:", err)
+		return model.CreateDisbursementProviderOutput{}, err
 	}
 
 	err = json.Unmarshal(respByte, &resp)
 	if err != nil {
 		fmt.Println("exec disb xendit unmarshal:", err)
+		return model.CreateDisbursementProviderOutput{}, err
 	}
 
 	return model.CreateDisbursementProviderOutput{

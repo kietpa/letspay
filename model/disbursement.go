@@ -19,12 +19,12 @@ type (
 	}
 
 	CreateDisbursementRequest struct {
-		UserReferenceId   string  `json:"user_reference_id"`
-		Amount            float64 `json:"amount"`
-		BankCode          string  `json:"bank_code"`
-		BankAccountNumber string  `json:"bank_account_number"`
-		BankAccountName   string  `json:"bank_account_name"`
-		Description       string  `json:"description,omitempty"`
+		UserReferenceId   string  `json:"user_reference_id" validate:"required,max=15"`
+		Amount            float64 `json:"amount" validate:"required,gte=5000"`
+		BankCode          string  `json:"bank_code" validate:"required"`
+		BankAccountNumber string  `json:"bank_account_number" validate:"required,numeric"`
+		BankAccountName   string  `json:"bank_account_name" validate:"required,alpha"`
+		Description       string  `json:"description,omitempty" validate:"required"`
 	}
 
 	CreateDisbursementInput struct {

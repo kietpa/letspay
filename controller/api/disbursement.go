@@ -3,20 +3,26 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"letspay/common/constants"
 	"letspay/controller"
 	"letspay/model"
+	"letspay/tool/helper"
 	"letspay/usecase"
 	"net/http"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type disbursementAPI struct {
 	disbursementUC usecase.Disbursement
+	validate       validator.Validate
 }
 
-func NewDisbursementAPI(dibursementUC usecase.Disbursement) *disbursementAPI {
+func NewDisbursementAPI(dibursementUC usecase.Disbursement, validate validator.Validate) *disbursementAPI {
 	return &disbursementAPI{
 		disbursementUC: dibursementUC,
+		validate:       validate,
 	}
 }
 
@@ -43,10 +49,19 @@ func (a *disbursementAPI) CreateDisbursement(
 	request := model.CreateDisbursementRequest{}
 
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
-		// TODO: log fail to unmarshal
+		fmt.Println("create disbursement unmarshal error: ", err)
 		return controller.Data{}, model.Error{
 			Code:    http.StatusInternalServerError,
 			Message: constants.INTERNAL_ERROR_MESSAGE,
+		}
+	}
+
+	if validationErrors := helper.ValidateStruct(request, a.validate); len(validationErrors) > 0 {
+		fmt.Println("create disbursement validation error: ", validationErrors)
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.VALIDATION_ERROR,
+			Errors:  validationErrors,
 		}
 	}
 

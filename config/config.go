@@ -18,7 +18,6 @@ func loadEnv() error {
 }
 
 func InitConfig() model.AppConfig {
-	// env := strings.ToLower(os.Getenv("APP_ENV"))
 	if err := loadEnv(); err != nil {
 		log.Printf("Failed to load env variables, err=%v", err)
 		panic(err)
