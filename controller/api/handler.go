@@ -23,7 +23,7 @@ func (m *ApiModule) GetDisbursement(w http.ResponseWriter, r *http.Request) {
 		trxId := vars["referenceId"]
 		InputParams := make(map[string]string)
 		InputParams["referenceId"] = trxId
-		response, err = m.disbursementAPI.GetDisbursement(ctx, InputParams)
+		response, err = m.disbursementApi.GetDisbursement(ctx, InputParams)
 		if err.Code != 0 {
 			respondWithError(w, err.Code, err.Message)
 			return
@@ -47,7 +47,30 @@ func (m *ApiModule) CreateDisbursement(w http.ResponseWriter, r *http.Request) {
 		param := make(map[string]string)
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
-		response, err = m.disbursementAPI.CreateDisbursement(ctx, param)
+		response, err = m.disbursementApi.CreateDisbursement(ctx, param)
+		if err.Code != 0 {
+			respondWithError(w, err.Code, err.Message)
+			return
+		}
+	default:
+		respondWithError(w, http.StatusMethodNotAllowed, constants.METHOD_NOT_ALLOWED_MESSAGE)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
+}
+
+func (m *ApiModule) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	response := controller.Data{}
+	err := model.Error{}
+	ctx := context.Background()
+
+	switch r.Method {
+	case http.MethodPost:
+		param := make(map[string]string)
+		body, _ := io.ReadAll(r.Body)
+		param[constants.JSON_BODY] = string(body)
+		response, err = m.userApi.RegisterUser(ctx, param)
 		if err.Code != 0 {
 			respondWithError(w, err.Code, err.Message)
 			return

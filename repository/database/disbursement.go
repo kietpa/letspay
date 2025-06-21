@@ -14,7 +14,9 @@ func NewDisbursementRepo(db *pgxpool.Pool) DisbursementRepo {
 	}
 }
 
-func (r *disbursementRepo) GetDisbursement(ctx context.Context, transactionId string) (dto.Disbursement, error) {
+func (r *disbursementRepo) GetDisbursement(
+	ctx context.Context, transactionId string,
+) (dto.Disbursement, error) {
 	resp := dto.Disbursement{}
 	query := `SELECT 
 	id,
@@ -32,10 +34,10 @@ func (r *disbursementRepo) GetDisbursement(ctx context.Context, transactionId st
 	bank_account_name,
 	description,
 	failure_code
-	FROM disbursement
-	where reference_id = $1`
+	FROM disbursements
+	WHERE reference_id = $1`
 
-	err := r.db.QueryRow(context.Background(), query, transactionId).Scan(
+	err := r.db.QueryRow(ctx, query, transactionId).Scan(
 		&resp.Id,
 		&resp.UserId,
 		&resp.ReferenceId,
@@ -56,10 +58,12 @@ func (r *disbursementRepo) GetDisbursement(ctx context.Context, transactionId st
 	return resp, err
 }
 
-func (r *disbursementRepo) CreateDisbursement(ctx context.Context, createDisbursementInput model.CreateDisbursementInput) error {
+func (r *disbursementRepo) CreateDisbursement(
+	ctx context.Context, createDisbursementInput model.CreateDisbursementInput,
+) error {
 	// this is the initial disbursement record
 	// failure_code, updated_at, provider_id, provider_reference_id is null
-	query := ` INSERT INTO disbursement
+	query := ` INSERT INTO disbursements
 	(
 	user_id, 
 	reference_id, 
@@ -105,7 +109,7 @@ func (r *disbursementRepo) CreateDisbursement(ctx context.Context, createDisburs
 func (r *disbursementRepo) UpdateDisbursement(
 	ctx context.Context, updateDisbursementInput model.UpdateDisbursementInput,
 ) error {
-	query := `UPDATE disbursement
+	query := `UPDATE disbursements
 	SET provider_id = $1,
 	provider_reference_id = $2,
 	status = $3,

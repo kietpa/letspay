@@ -1,5 +1,6 @@
 package constants
 
 const (
-	DISBURSEMENT string = "/disbursement"
+	DISBURSEMENT = "/disbursement"
+	USER         = "/user"
 )

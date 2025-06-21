@@ -16,24 +16,28 @@ import (
 type (
 	ApiModule struct {
 		config          model.AppConfig
-		disbursementAPI *disbursementAPI
+		disbursementApi *disbursementApi
+		userApi         *userApi
 	}
 )
 
 func NewAPI(
 	config model.AppConfig,
-	disbursementUC usecase.Disbursement,
+	disbursementUC usecase.DisbursementUsecase,
+	userUC usecase.UserUsecase,
 	validate validator.Validate,
 ) *ApiModule {
 	return &ApiModule{
 		config:          config,
-		disbursementAPI: NewDisbursementAPI(disbursementUC, validate),
+		disbursementApi: NewDisbursementAPI(disbursementUC, validate),
+		userApi:         NewUserApi(userUC, validate),
 	}
 }
 
 func HandleRequests(
 	cfg model.AppConfig,
 	disbursementRepo database.DisbursementRepo,
+	userRepo database.UserRepo,
 	providerRepo map[int]provider.ProviderRepo,
 ) {
 	validate := validator.New()
@@ -42,13 +46,19 @@ func HandleRequests(
 	// router.Use(controller.LoggingMiddleware)
 
 	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
+	userUC := usecase.NewUserUsecase(userRepo)
 
 	apiModule := NewAPI(
 		cfg,
 		disbursementUC,
+		userUC,
 		*validate,
 	)
 
+	// User
+	router.HandleFunc(constants.USER+"/register", apiModule.RegisterUser)
+
+	// Disbursement (GET, POST)
 	router.HandleFunc(constants.DISBURSEMENT+"/{referenceId}", apiModule.GetDisbursement)
 	router.HandleFunc(constants.DISBURSEMENT, apiModule.CreateDisbursement)
 

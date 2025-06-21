@@ -3,7 +3,7 @@ package model
 import "time"
 
 // request = from user
-// input = from usecase to repo/DB
+// input = from usecase to repo/json
 type (
 	DisbursementDetail struct {
 		ReferenceId       string
@@ -28,24 +28,24 @@ type (
 	}
 
 	CreateDisbursementInput struct {
-		UserId            int       `db:"user_id"`
-		ReferenceId       string    `db:"reference_id"`
-		UserReferenceId   string    `db:"user_reference_id"`
-		Status            string    `db:"status"`
-		Amount            float64   `db:"amount"`
-		BankCode          string    `db:"bank_code"`
-		CreatedAt         time.Time `db:"created_at"`
-		BankAccountNumber string    `db:"bank_account_number"`
-		BankAccountName   string    `db:"bank_account_name"`
-		Description       string    `db:"description"`
+		UserId            int       `json:"user_id"`
+		ReferenceId       string    `json:"reference_id"`
+		UserReferenceId   string    `json:"user_reference_id"`
+		Status            string    `json:"status"`
+		Amount            float64   `json:"amount"`
+		BankCode          string    `json:"bank_code"`
+		CreatedAt         time.Time `json:"created_at"`
+		BankAccountNumber string    `json:"bank_account_number"`
+		BankAccountName   string    `json:"bank_account_name"`
+		Description       string    `json:"description"`
 	}
 
 	UpdateDisbursementInput struct {
-		ReferenceId         string    `db:"reference_id"`
-		ProviderId          int       `db:"provider_id,omitempty"`
-		ProviderReferenceId string    `db:"provider_reference_id,omitempty"`
-		Status              string    `db:"status"`
-		UpdatedAt           time.Time `db:"updated_at"`
-		FailureCode         string    `db:"failure_code,omitempty"`
+		ReferenceId         string    `json:"reference_id"`
+		ProviderId          int       `json:"provider_id,omitempty"`
+		ProviderReferenceId string    `json:"provider_reference_id,omitempty"`
+		Status              string    `json:"status"`
+		UpdatedAt           time.Time `json:"updated_at"`
+		FailureCode         string    `json:"failure_code,omitempty"`
 	}
 )

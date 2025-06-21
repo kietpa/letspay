@@ -13,6 +13,10 @@ type (
 		db *pgxpool.Pool
 	}
 
+	userRepo struct {
+		db *pgxpool.Pool
+	}
+
 	DisbursementRepo interface {
 		GetDisbursement(
 			ctx context.Context, transactionId string,
@@ -23,5 +27,16 @@ type (
 		UpdateDisbursement(
 			ctx context.Context, updateDisbursementInput model.UpdateDisbursementInput,
 		) error
+	}
+
+	UserRepo interface {
+		RegisterUser(
+			ctx context.Context,
+			registerUserInput model.RegisterUserInput,
+		) error
+		GetUserByEmail(
+			ctx context.Context,
+			email string,
+		) (dto.User, error)
 	}
 )
