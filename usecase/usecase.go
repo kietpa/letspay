@@ -13,8 +13,22 @@ type (
 		providerRepo     map[int]provider.ProviderRepo
 	}
 
-	Disbursement interface {
-		GetDisbursement(ctx context.Context, refid string) (model.DisbursementDetail, model.Error)
-		CreateDisbursement(ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest) (model.DisbursementDetail, model.Error)
+	userUsecase struct {
+		userRepo database.UserRepo
+	}
+
+	DisbursementUsecase interface {
+		GetDisbursement(
+			ctx context.Context, refid string,
+		) (model.DisbursementDetail, model.Error)
+		CreateDisbursement(
+			ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest,
+		) (model.DisbursementDetail, model.Error)
+	}
+
+	UserUsecase interface {
+		RegisterUser(
+			ctx context.Context, registerUserRequest model.RegisterUserRequest,
+		) (model.UserDetail, model.Error)
 	}
 )

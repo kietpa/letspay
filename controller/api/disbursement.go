@@ -14,19 +14,21 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type disbursementAPI struct {
-	disbursementUC usecase.Disbursement
+type disbursementApi struct {
+	disbursementUC usecase.DisbursementUsecase
 	validate       validator.Validate
 }
 
-func NewDisbursementAPI(dibursementUC usecase.Disbursement, validate validator.Validate) *disbursementAPI {
-	return &disbursementAPI{
+func NewDisbursementAPI(
+	dibursementUC usecase.DisbursementUsecase, validate validator.Validate,
+) *disbursementApi {
+	return &disbursementApi{
 		disbursementUC: dibursementUC,
 		validate:       validate,
 	}
 }
 
-func (a *disbursementAPI) GetDisbursement(
+func (a *disbursementApi) GetDisbursement(
 	ctx context.Context, param map[string]string,
 ) (controller.Data, model.Error) {
 	response := controller.Data{}
@@ -42,7 +44,7 @@ func (a *disbursementAPI) GetDisbursement(
 	return response, model.Error{}
 }
 
-func (a *disbursementAPI) CreateDisbursement(
+func (a *disbursementApi) CreateDisbursement(
 	ctx context.Context, param map[string]string,
 ) (controller.Data, model.Error) {
 	response := controller.Data{}
@@ -51,8 +53,8 @@ func (a *disbursementAPI) CreateDisbursement(
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
 		fmt.Println("create disbursement unmarshal error: ", err)
 		return controller.Data{}, model.Error{
-			Code:    http.StatusInternalServerError,
-			Message: constants.INTERNAL_ERROR_MESSAGE,
+			Code:    http.StatusBadRequest,
+			Message: constants.INVALID_JSON_BODY,
 		}
 	}
 
@@ -65,13 +67,13 @@ func (a *disbursementAPI) CreateDisbursement(
 		}
 	}
 
-	disbursement, err := a.disbursementUC.CreateDisbursement(ctx, request)
+	disbursementResponse, err := a.disbursementUC.CreateDisbursement(ctx, request)
 	if err.Code != 0 {
 		return controller.Data{}, err
 	}
 
 	response.Status = http.StatusOK
-	response.Data = disbursement
+	response.Data = disbursementResponse
 
 	return response, model.Error{}
 }

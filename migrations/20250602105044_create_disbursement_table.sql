@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE disbursement (
+CREATE TABLE disbursements (
     id SERIAL PRIMARY KEY,
     user_id int,
     reference_id varchar(255),
@@ -18,4 +18,4 @@ CREATE TABLE disbursement (
 );
 
 -- +goose Down
-DROP TABLE disbursement;
+DROP TABLE disbursements;

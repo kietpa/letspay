@@ -8,7 +8,7 @@ const (
 	BANK_ACCOUNT_NOT_FOUND_MESSAGE = "Bank account not found"
 
 	METHOD_NOT_ALLOWED_MESSAGE = "Method not allowed"
-
-	BANK_CODE_INVALID_MESSAGE = "Bank code invalid"
-	EMAIL_INVALID_MESSAGE     = "Email invalid"
+	INVALID_JSON_BODY          = "Request json body invalid"
+	BANK_CODE_INVALID_MESSAGE  = "Bank code invalid"
+	EMAIL_INVALID_MESSAGE      = "Email invalid"
 )

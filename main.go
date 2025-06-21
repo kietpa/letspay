@@ -19,6 +19,7 @@ func main() {
 
 	// init repo with DB instance
 	disbursementRepo := database.NewDisbursementRepo(db)
+	userRepo := database.NewUserRepo(db)
 
 	// TODO: init providers (agents in test)
 	// provider mapper
@@ -37,7 +38,7 @@ func main() {
 	// mssg queue
 
 	// routing/handler
-	api.HandleRequests(cfg, disbursementRepo, providerRepo)
+	api.HandleRequests(cfg, disbursementRepo, userRepo, providerRepo)
 
 	db.Close()
 }

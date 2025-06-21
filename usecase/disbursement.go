@@ -15,7 +15,7 @@ import (
 func NewDisbursementUsecase(
 	disbursementRepo database.DisbursementRepo,
 	providerRepo map[int]provider.ProviderRepo,
-) Disbursement {
+) DisbursementUsecase {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
 		providerRepo:     providerRepo,
