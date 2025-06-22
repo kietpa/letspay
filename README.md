@@ -9,15 +9,16 @@ Simple payment aggregator app that's still being worked on. Currently a monolith
 2. run migrations:
     goose -dir migrations postgres "user=letsuser password=letspassword dbname=letspay port=5372 sslmode=disable" up
 change port if needed
-3. add credentials in the env file (WIP)
-4. run the app (WIP)
+3. add credentials in the env file
+4. run the app
 
 # To do
-- [ ] user system
+- [x] struct validation
+- [ ] user system with JWT auth
 - [ ] Basic disbursement system
 - [ ] improved logging with grafana/elk
-- [ ] improved error handling & validation
+- [ ] improved error handling (handle provider response, database errors, catch panics)
 - [ ] handle timeouts
 - [ ] handle race conditions
-- [ ] scheduler system to check & update status
+- [ ] scheduler system to check & update disbursement status
 - [ ] add api documentation & improve readme (table of contents, etc)

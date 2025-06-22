@@ -27,7 +27,7 @@ func (u userUsecase) RegisterUser(
 	if err == nil {
 		log.Println("usecase register user check user err:", err)
 		return model.UserDetail{}, model.Error{
-			Code:    http.StatusBadRequest,
+			Code:    http.StatusConflict,
 			Message: constants.EMAIL_INVALID_MESSAGE,
 		}
 	}
@@ -58,5 +58,39 @@ func (u userUsecase) RegisterUser(
 	return model.UserDetail{
 		Name:  registerUserRequest.Name,
 		Email: registerUserRequest.Email,
+	}, model.Error{}
+}
+
+func (u userUsecase) LoginUser(
+	ctx context.Context, loginUserRequest model.LoginUserRequest,
+) (model.LoginUserResponse, model.Error) {
+	user, err := u.userRepo.GetUserByEmail(ctx, loginUserRequest.Email)
+	if err != nil {
+		log.Println("usecase login user check user err:", err)
+		return model.LoginUserResponse{}, model.Error{
+			Code:    http.StatusNotFound,
+			Message: constants.EMAIL_INVALID_MESSAGE,
+		}
+	}
+
+	if !util.CheckPassword(loginUserRequest.Password, user.HashedPassword) {
+		log.Println("usecase login user check password err: invalid password")
+		return model.LoginUserResponse{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.PASSWORD_INVALID_MESSAGE,
+		}
+	}
+
+	token, err := util.GenerateToken(&user)
+	if err != nil {
+		log.Println("usecase login user generate token err:", err)
+		return model.LoginUserResponse{}, model.Error{
+			Code:    http.StatusInternalServerError,
+			Message: constants.INTERNAL_ERROR_MESSAGE,
+		}
+	}
+
+	return model.LoginUserResponse{
+		Token: token,
 	}, model.Error{}
 }

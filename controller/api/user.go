@@ -61,3 +61,37 @@ func (a *userApi) RegisterUser(
 
 	return response, model.Error{}
 }
+
+func (a *userApi) LoginUser(
+	ctx context.Context, param map[string]string,
+) (controller.Data, model.Error) {
+	response := controller.Data{}
+	request := model.LoginUserRequest{}
+
+	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
+		fmt.Println("login user unmarshal error: ", err)
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.INVALID_JSON_BODY,
+		}
+	}
+
+	if validationErrors := helper.ValidateStruct(request, a.validate); len(validationErrors) > 0 {
+		fmt.Println("login user validation error: ", validationErrors)
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.VALIDATION_ERROR,
+			Errors:  validationErrors,
+		}
+	}
+
+	userResponse, err := a.userUC.LoginUser(ctx, request)
+	if err.Code != 0 {
+		return controller.Data{}, err
+	}
+
+	response.Status = http.StatusOK
+	response.Data = userResponse
+
+	return response, model.Error{}
+}

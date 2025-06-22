@@ -54,11 +54,11 @@ func (u disbursementUsecase) GetDisbursement(
 // 3. record final status, respond to user
 // 4. if no final status available, set to pending
 func (u disbursementUsecase) CreateDisbursement(
-	ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest,
+	ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest, userId int,
 ) (model.DisbursementDetail, model.Error) {
 
 	input := model.CreateDisbursementInput{
-		UserId:            123, // TODO: retrieve user id
+		UserId:            userId,
 		ReferenceId:       util.GenerateReferenceId(),
 		UserReferenceId:   createDisbursementRequest.UserReferenceId,
 		Status:            constants.STATUS_PENDING,
