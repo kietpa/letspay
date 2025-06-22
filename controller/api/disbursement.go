@@ -10,6 +10,7 @@ import (
 	"letspay/tool/helper"
 	"letspay/usecase"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -67,7 +68,9 @@ func (a *disbursementApi) CreateDisbursement(
 		}
 	}
 
-	disbursementResponse, err := a.disbursementUC.CreateDisbursement(ctx, request)
+	userId, _ := strconv.Atoi(param[constants.USER_ID])
+
+	disbursementResponse, err := a.disbursementUC.CreateDisbursement(ctx, request, userId)
 	if err.Code != 0 {
 		return controller.Data{}, err
 	}

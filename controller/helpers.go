@@ -1,12 +1,13 @@
-package api
+package controller
 
 import (
 	"encoding/json"
+	"letspay/model"
 	"log"
 	"net/http"
 )
 
-func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+func RespondWithJSON(w http.ResponseWriter, statusCode int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
@@ -17,6 +18,6 @@ func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	}
 }
 
-func respondWithError(w http.ResponseWriter, statusCode int, message string) {
-	respondWithJSON(w, statusCode, map[string]string{"error": message})
+func RespondWithError(w http.ResponseWriter, statusCode int, errors model.Error) {
+	RespondWithJSON(w, statusCode, errors)
 }

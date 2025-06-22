@@ -57,7 +57,6 @@ func SendRequest(config RequestConfig) ([]byte, int, error) {
 	if config.BasicAuth != nil {
 		req.SetBasicAuth(config.BasicAuth.Username, config.BasicAuth.Password)
 	}
-	fmt.Println(req.Header)
 
 	// Set timeout
 	client := &http.Client{

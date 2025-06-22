@@ -22,7 +22,7 @@ type (
 			ctx context.Context, refid string,
 		) (model.DisbursementDetail, model.Error)
 		CreateDisbursement(
-			ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest,
+			ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest, userId int,
 		) (model.DisbursementDetail, model.Error)
 	}
 
@@ -30,5 +30,8 @@ type (
 		RegisterUser(
 			ctx context.Context, registerUserRequest model.RegisterUserRequest,
 		) (model.UserDetail, model.Error)
+		LoginUser(
+			ctx context.Context, loginUserRequest model.LoginUserRequest,
+		) (model.LoginUserResponse, model.Error)
 	}
 )

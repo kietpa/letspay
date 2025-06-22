@@ -58,10 +58,11 @@ func (r *userRepo) GetUserByEmail(
 	WHERE email = $1`
 
 	err := r.db.QueryRow(ctx, query, email).Scan(
-		resp.UserId,
-		resp.Name,
-		resp.HashedPassword,
-		resp.CreatedAt,
+		&resp.UserId,
+		&resp.Name,
+		&resp.Email,
+		&resp.HashedPassword,
+		&resp.CreatedAt,
 	)
 
 	return resp, err

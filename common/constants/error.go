@@ -7,8 +7,11 @@ const (
 	TRANSACTION_NOT_FOUND_MESSAGE  = "Transaction not found"
 	BANK_ACCOUNT_NOT_FOUND_MESSAGE = "Bank account not found"
 
-	METHOD_NOT_ALLOWED_MESSAGE = "Method not allowed"
-	INVALID_JSON_BODY          = "Request json body invalid"
-	BANK_CODE_INVALID_MESSAGE  = "Bank code invalid"
-	EMAIL_INVALID_MESSAGE      = "Email invalid"
+	METHOD_NOT_ALLOWED_MESSAGE  = "Method not allowed"
+	INVALID_JSON_BODY           = "Request json body invalid"
+	BANK_CODE_INVALID_MESSAGE   = "Bank code invalid"
+	EMAIL_INVALID_MESSAGE       = "Email invalid"
+	PASSWORD_INVALID_MESSAGE    = "Password invalid"
+	TOKEN_INVALID_MESSAGE       = "Token invalid"
+	MISSING_AUTH_HEADER_MESSAGE = "Authorization header missing"
 )
