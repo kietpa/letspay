@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"letspay/common/constants"
 	"letspay/model"
 	"letspay/repository/provider"
 	"letspay/tool/helper"
+	"log"
 	"net/http"
 	"time"
 
@@ -16,6 +18,14 @@ import (
 const (
 	X_IDEMPOTENCY_KEY = "X-IDEMPOTENCY-KEY"
 )
+
+var XenditErr = map[string]string{
+	"RECIPIENT_ACCOUNT_NUMBER_ERROR": constants.INVALID_BANK_ACCOUNT_MESSAGE,
+	"INVALID_DESTINATION":            constants.INVALID_BANK_ACCOUNT_MESSAGE,
+	"TRANSFER_ERROR":                 constants.INVALID_TRANSFER_REQUEST,
+	"REJECTED_BY_BANK":               constants.REJECTED_TRANSFER,
+	"REJECTED_BY_CHANNEL":            constants.REJECTED_TRANSFER,
+}
 
 type (
 	xenditExecDisburseInput struct {
@@ -99,7 +109,9 @@ func (p *providerRepo) ExecuteDisbursement(
 		return model.CreateDisbursementProviderOutput{}, err
 	}
 
-	return model.CreateDisbursementProviderOutput{
+	log.Println(resp)
+
+	output := model.CreateDisbursementProviderOutput{
 		ReferenceId:         resp.ExternalId,
 		ProviderReferenceId: resp.Id,
 		Status:              resp.Status,
@@ -108,9 +120,50 @@ func (p *providerRepo) ExecuteDisbursement(
 		BankAccountName:     resp.AccountHolderName,
 		Description:         resp.DisbursementDescription,
 		FailureCode:         resp.FailureCode,
-	}, nil
+	}
+
+	if mssg, ok := XenditErr[resp.FailureCode]; ok {
+		output.FailureCode = mssg
+		output.StatusCode = http.StatusBadRequest
+	}
+
+	return output, nil
 }
 
-func (p *providerRepo) GetDisbursementStatus(ctx context.Context) error {
-	return nil
+func (p *providerRepo) GetDisbursementStatus(
+	ctx context.Context, providerRefid string,
+) (model.GetDisbursementProviderResponse, error) {
+	cfg := helper.RequestConfig{
+		URL:    p.baseUrl + "/disbursements/" + providerRefid,
+		Method: http.MethodGet,
+		Headers: map[string]string{
+			X_IDEMPOTENCY_KEY: uuid.New().String(),
+		},
+		Timeout: time.Duration(30) * time.Second,
+		BasicAuth: &helper.BasicAuthConfig{
+			Username: p.apiKey,
+			Password: "",
+		},
+		ExpectedStatus: http.StatusOK,
+	}
+
+	resp := xenditDisbursementObject{}
+	respByte, statusCode, err := helper.SendRequest(cfg)
+	if err != nil {
+		fmt.Println(statusCode, "get disb xendit resp:", err)
+		return model.GetDisbursementProviderResponse{}, err
+	}
+
+	err = json.Unmarshal(respByte, &resp)
+	if err != nil {
+		fmt.Println(statusCode, "get disb xendit resp:", err)
+		return model.GetDisbursementProviderResponse{}, err
+	}
+
+	return model.GetDisbursementProviderResponse{
+		ReferenceId:         resp.ExternalId,
+		ProviderReferenceId: resp.Id,
+		Status:              resp.Status,
+		FailureReason:       resp.FailureCode,
+	}, nil
 }

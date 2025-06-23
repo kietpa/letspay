@@ -14,11 +14,11 @@ change port if needed
 
 # To do
 - [x] struct validation
-- [ ] user system with JWT auth
-- [ ] Basic disbursement system
+- [x] user system with JWT auth
+- [x] Basic disbursement system
+- [ ] scheduler system to check & update disbursement status
 - [ ] improved logging with grafana/elk
+- [ ] add api documentation & improve readme (table of contents, etc)
 - [ ] improved error handling (handle provider response, database errors, catch panics)
 - [ ] handle timeouts
 - [ ] handle race conditions
-- [ ] scheduler system to check & update disbursement status
-- [ ] add api documentation & improve readme (table of contents, etc)

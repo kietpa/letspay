@@ -11,7 +11,7 @@ type (
 			ctx context.Context, input model.CreateDisbursementInput,
 		) (model.CreateDisbursementProviderOutput, error)
 		GetDisbursementStatus(
-			ctx context.Context,
-		) error
+			ctx context.Context, providerRefid string,
+		) (model.GetDisbursementProviderResponse, error)
 	}
 )
