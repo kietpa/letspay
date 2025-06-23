@@ -33,7 +33,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if err != nil || !token.Valid {
 			controller.RespondWithError(w, http.StatusUnauthorized, model.Error{
 				Code:    http.StatusUnauthorized,
-				Message: constants.TOKEN_INVALID_MESSAGE,
+				Message: constants.INVALID_TOKEN_MESSAGE,
 			})
 			return
 		}

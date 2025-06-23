@@ -28,7 +28,7 @@ func (u userUsecase) RegisterUser(
 		log.Println("usecase register user check user err:", err)
 		return model.UserDetail{}, model.Error{
 			Code:    http.StatusConflict,
-			Message: constants.EMAIL_INVALID_MESSAGE,
+			Message: constants.INVALID_EMAIL_MESSAGE,
 		}
 	}
 
@@ -69,7 +69,7 @@ func (u userUsecase) LoginUser(
 		log.Println("usecase login user check user err:", err)
 		return model.LoginUserResponse{}, model.Error{
 			Code:    http.StatusNotFound,
-			Message: constants.EMAIL_INVALID_MESSAGE,
+			Message: constants.INVALID_EMAIL_MESSAGE,
 		}
 	}
 
@@ -77,7 +77,7 @@ func (u userUsecase) LoginUser(
 		log.Println("usecase login user check password err: invalid password")
 		return model.LoginUserResponse{}, model.Error{
 			Code:    http.StatusBadRequest,
-			Message: constants.PASSWORD_INVALID_MESSAGE,
+			Message: constants.INVALID_EMAIL_MESSAGE,
 		}
 	}
 

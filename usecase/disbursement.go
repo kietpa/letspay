@@ -26,11 +26,54 @@ func (u disbursementUsecase) GetDisbursement(
 	ctx context.Context, refid string,
 ) (model.DisbursementDetail, model.Error) {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, refid)
-	log.Println("usecase get disb repo err:", err)
 	if err != nil {
+		log.Println("usecase get disb repo err:", err)
 		return model.DisbursementDetail{}, model.Error{
 			Code:    http.StatusNotFound,
 			Message: constants.TRANSACTION_NOT_FOUND_MESSAGE,
+		}
+	}
+
+	if resp.Status == "PENDING" {
+		// TODO: get provider id from above later
+		provResp, err := u.providerRepo[constants.XENDIT_PROVIDER_ID].GetDisbursementStatus(ctx, resp.ProviderReferenceId)
+		if err != nil {
+			log.Println("usecase get disb provider err:", err)
+			return model.DisbursementDetail{}, model.Error{
+				Code:    http.StatusInternalServerError,
+				Message: constants.INTERNAL_ERROR_MESSAGE,
+			}
+		}
+
+		if provResp.Status != resp.Status {
+			err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+				ReferenceId:         provResp.ReferenceId,
+				ProviderId:          constants.XENDIT_PROVIDER_ID,
+				ProviderReferenceId: provResp.ProviderReferenceId,
+				Status:              provResp.Status,
+				UpdatedAt:           time.Now(),
+				FailureCode:         provResp.FailureReason,
+			})
+			if err != nil {
+				log.Println("usecase get disb provider update DB err:", err)
+				return model.DisbursementDetail{}, model.Error{
+					Code:    http.StatusInternalServerError,
+					Message: constants.INTERNAL_ERROR_MESSAGE,
+				}
+			}
+
+			return model.DisbursementDetail{
+				ReferenceId:       resp.ReferenceId,
+				UserReferenceId:   resp.UserReferenceId,
+				Status:            provResp.Status,
+				Amount:            resp.Amount,
+				BankCode:          resp.BankCode,
+				CreatedAt:         resp.CreatedAt,
+				BankAccountNumber: resp.BankAccountNumber,
+				BankAccountName:   resp.BankAccountName,
+				Description:       resp.Description,
+				FailureCode:       provResp.FailureReason,
+			}, model.Error{}
 		}
 	}
 
@@ -95,7 +138,12 @@ func (u disbursementUsecase) CreateDisbursement(
 				FailureCode:         resp.FailureCode,
 			})
 
-			// TODO: handle 400 bad request errors from provider
+			if resp.StatusCode == http.StatusBadRequest {
+				return model.DisbursementDetail{}, model.Error{
+					Code:    http.StatusBadRequest,
+					Message: resp.FailureCode,
+				}
+			}
 			return model.DisbursementDetail{}, model.Error{
 				Code:    http.StatusInternalServerError,
 				Message: constants.INTERNAL_ERROR_MESSAGE,

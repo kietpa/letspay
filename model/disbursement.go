@@ -18,6 +18,13 @@ type (
 		FailureCode       string
 	}
 
+	GetDisbursementProviderResponse struct {
+		ReferenceId         string
+		ProviderReferenceId string
+		Status              string
+		FailureReason       string
+	}
+
 	CreateDisbursementRequest struct {
 		UserReferenceId   string  `json:"user_reference_id" validate:"required,max=15"`
 		Amount            float64 `json:"amount" validate:"required,gte=5000"`
