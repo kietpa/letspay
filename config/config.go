@@ -24,8 +24,9 @@ func InitConfig() model.AppConfig {
 	}
 
 	xenditProvider := model.Provider{
-		ApiKey:  os.Getenv("XENDIT_API_KEY"),
-		BaseUrl: os.Getenv("XENDIT_BASE_URL"),
+		ApiKey:        os.Getenv("XENDIT_API_KEY"),
+		BaseUrl:       os.Getenv("XENDIT_BASE_URL"),
+		CallbackToken: os.Getenv("XENDIT_CALLBACK_TOKEN"),
 	}
 
 	return model.AppConfig{

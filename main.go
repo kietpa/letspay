@@ -21,12 +21,11 @@ func main() {
 	disbursementRepo := database.NewDisbursementRepo(db)
 	userRepo := database.NewUserRepo(db)
 
-	// TODO: init providers (agents in test)
-	// provider mapper
 	xenditRepo := xendit.NewProviderRepo(
 		xendit.NewProviderRepoInput{
-			BaseUrl: cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
-			ApiKey:  cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
+			BaseUrl:       cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
+			ApiKey:        cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
+			CallbackToken: cfg.Provider[constants.XENDIT_PROVIDER_ID].CallbackToken,
 		},
 	)
 

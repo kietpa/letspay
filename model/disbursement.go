@@ -55,4 +55,25 @@ type (
 		UpdatedAt           time.Time `json:"updated_at"`
 		FailureCode         string    `json:"failure_code,omitempty"`
 	}
+
+	CallbackDisbursementRequest struct {
+		ReferenceId string `json:"reference_id"`
+		Status      string `json:"status"`
+		FailureCode string `json:"failure_code,omitempty"`
+	}
+
+	XenditDisbursementCallback struct {
+		Id                      string `json:"id"`
+		Created                 string `json:"created"`
+		Updated                 string `json:"updated"`
+		ExternalId              string `json:"external_id"`
+		UserId                  string `json:"user_id"`
+		BankCode                string `json:"bank_code"`
+		AccountHolderName       string `json:"account_holder_name"`
+		Amount                  uint32 `json:"amount"`
+		DisbursementDescription string `json:"disbursement_description"`
+		Status                  string `json:"status"`
+		FailureCode             string `json:"failure_code,omitempty"`
+		IsInstant               bool   `json:"is_instant"`
+	}
 )

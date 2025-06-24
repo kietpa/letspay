@@ -80,3 +80,52 @@ func (a *disbursementApi) CreateDisbursement(
 
 	return response, model.Error{}
 }
+
+func (a *disbursementApi) CallbackDisbursement(
+	ctx context.Context, param map[string]string,
+) (controller.Data, model.Error) {
+	response := controller.Data{}
+	body := model.XenditDisbursementCallback{}
+	var decodedHeaders http.Header
+
+	if err := json.Unmarshal([]byte(param[constants.REQUEST_HEADERS]), &decodedHeaders); err != nil {
+		fmt.Println("callback disbursement unmarshal error: ", err)
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.INVALID_JSON_BODY,
+		}
+	}
+
+	if !a.disbursementUC.CallbackValidateToken(ctx, decodedHeaders, param[constants.PROVIDER]) {
+		return controller.Data{}, model.Error{
+			Code:    http.StatusUnauthorized,
+			Message: constants.INVALID_TOKEN_MESSAGE,
+		}
+	}
+
+	// TODO: handle idempotency with redis
+
+	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &body); err != nil {
+		fmt.Println("callback disbursement unmarshal error: ", err)
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.INVALID_JSON_BODY,
+		}
+	}
+
+	request := model.CallbackDisbursementRequest{
+		ReferenceId: body.ExternalId,
+		Status:      body.Status,
+		FailureCode: body.FailureCode,
+	}
+
+	err := a.disbursementUC.CallbackDisbursement(ctx, request)
+	if err.Code != 0 {
+		return controller.Data{}, err
+	}
+
+	response.Status = http.StatusOK
+	response.Data = "Callback received"
+
+	return response, model.Error{}
+}

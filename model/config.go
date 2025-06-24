@@ -9,9 +9,10 @@ type (
 	}
 
 	Provider struct {
-		ClientId string
-		ApiKey   string
-		BaseUrl  string
+		ClientId      string
+		ApiKey        string
+		BaseUrl       string
+		CallbackToken string
 	}
 
 	Server struct {
