@@ -63,6 +63,9 @@ func HandleRequests(
 	disbursement.HandleFunc("/{referenceId}", apiModule.GetDisbursement)
 	disbursement.HandleFunc("", apiModule.CreateDisbursement)
 
+	callback := router.PathPrefix(constants.CALLBACK).Subrouter()
+	callback.HandleFunc(constants.DISBURSEMENT+"/{provider}", apiModule.CallbackDisbursement)
+
 	log.Println("API listening on port: " + cfg.Server.Port)
 	http.ListenAndServe(":"+cfg.Server.Port, router)
 }

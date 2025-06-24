@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"letspay/model"
+	"net/http"
 )
 
 type (
@@ -13,5 +14,8 @@ type (
 		GetDisbursementStatus(
 			ctx context.Context, providerRefid string,
 		) (model.GetDisbursementProviderResponse, error)
+		ValidateCallbackToken(
+			ctx context.Context, headers http.Header,
+		) bool
 	}
 )

@@ -35,8 +35,7 @@ func (u disbursementUsecase) GetDisbursement(
 	}
 
 	if resp.Status == "PENDING" {
-		// TODO: get provider id from above later
-		provResp, err := u.providerRepo[constants.XENDIT_PROVIDER_ID].GetDisbursementStatus(ctx, resp.ProviderReferenceId)
+		provResp, err := u.providerRepo[resp.ProviderId].GetDisbursementStatus(ctx, resp.ProviderReferenceId)
 		if err != nil {
 			log.Println("usecase get disb provider err:", err)
 			return model.DisbursementDetail{}, model.Error{
@@ -189,4 +188,49 @@ func (u disbursementUsecase) CreateDisbursement(
 		Description:       input.Description,
 		FailureCode:       resp.FailureCode,
 	}, model.Error{}
+}
+
+func (u disbursementUsecase) CallbackDisbursement(
+	ctx context.Context, callbackDisbursementRequest model.CallbackDisbursementRequest,
+) model.Error {
+	resp, err := u.disbursementRepo.GetDisbursement(ctx, callbackDisbursementRequest.ReferenceId)
+	if err != nil {
+		log.Println("usecase callback disb repo err:", err)
+		return model.Error{
+			Code:    http.StatusNotFound,
+			Message: constants.TRANSACTION_NOT_FOUND_MESSAGE,
+		}
+	}
+
+	if callbackDisbursementRequest.Status != resp.Status {
+		err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+			ReferenceId:         resp.ReferenceId,
+			ProviderId:          resp.ProviderId,
+			ProviderReferenceId: resp.ProviderReferenceId,
+			Status:              callbackDisbursementRequest.Status,
+			UpdatedAt:           time.Now(),
+			FailureCode:         callbackDisbursementRequest.FailureCode,
+		})
+		if err != nil {
+			log.Println("usecase callback disb provider update DB err:", err)
+			return model.Error{
+				Code:    http.StatusInternalServerError,
+				Message: constants.INTERNAL_ERROR_MESSAGE,
+			}
+		}
+	}
+
+	return model.Error{}
+}
+
+func (u disbursementUsecase) CallbackValidateToken(
+	ctx context.Context, headers http.Header, provider string,
+) bool {
+	switch provider {
+	case "xendit":
+		return u.providerRepo[constants.XENDIT_PROVIDER_ID].ValidateCallbackToken(
+			ctx, headers,
+		)
+	}
+	return false
 }

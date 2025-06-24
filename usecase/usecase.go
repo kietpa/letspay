@@ -5,6 +5,7 @@ import (
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/repository/provider"
+	"net/http"
 )
 
 type (
@@ -24,6 +25,12 @@ type (
 		CreateDisbursement(
 			ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest, userId int,
 		) (model.DisbursementDetail, model.Error)
+		CallbackDisbursement(
+			ctx context.Context, callbackDisbursementRequest model.CallbackDisbursementRequest,
+		) model.Error
+		CallbackValidateToken(
+			ctx context.Context, headers http.Header, provider string,
+		) bool
 	}
 
 	UserUsecase interface {

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"letspay/common/constants"
 	"letspay/controller"
@@ -101,6 +102,35 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
 		response, err = m.userApi.LoginUser(ctx, param)
+		if err.Code != 0 {
+			controller.RespondWithError(w, err.Code, err)
+			return
+		}
+	default:
+		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		return
+	}
+
+	controller.RespondWithJSON(w, http.StatusOK, response)
+}
+
+func (m *ApiModule) CallbackDisbursement(w http.ResponseWriter, r *http.Request) {
+	response := controller.Data{}
+	err := model.Error{}
+	ctx := context.Background()
+
+	switch r.Method {
+	case http.MethodPost:
+		param := make(map[string]string)
+		vars := mux.Vars(r)
+		param[constants.PROVIDER] = vars[constants.PROVIDER]
+
+		body, _ := io.ReadAll(r.Body)
+		param[constants.JSON_BODY] = string(body)
+		encodedHeaders, _ := json.Marshal(r.Header)
+		param[constants.REQUEST_HEADERS] = string(encodedHeaders)
+
+		response, err = m.disbursementApi.CallbackDisbursement(ctx, param)
 		if err.Code != 0 {
 			controller.RespondWithError(w, err.Code, err)
 			return

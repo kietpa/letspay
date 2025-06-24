@@ -52,20 +52,23 @@ type (
 
 type (
 	providerRepo struct {
-		baseUrl string
-		apiKey  string
+		baseUrl       string
+		apiKey        string
+		callbackToken string
 	}
 
 	NewProviderRepoInput struct {
-		BaseUrl string
-		ApiKey  string
+		BaseUrl       string
+		ApiKey        string
+		CallbackToken string
 	}
 )
 
 func NewProviderRepo(input NewProviderRepoInput) provider.ProviderRepo {
 	return &providerRepo{
-		baseUrl: input.BaseUrl,
-		apiKey:  input.ApiKey,
+		baseUrl:       input.BaseUrl,
+		apiKey:        input.ApiKey,
+		callbackToken: input.CallbackToken,
 	}
 }
 
@@ -166,4 +169,10 @@ func (p *providerRepo) GetDisbursementStatus(
 		Status:              resp.Status,
 		FailureReason:       resp.FailureCode,
 	}, nil
+}
+
+func (p *providerRepo) ValidateCallbackToken(
+	ctx context.Context, headers http.Header,
+) bool {
+	return p.callbackToken == headers.Get(constants.X_CALLBACK_TOKEN)
 }
