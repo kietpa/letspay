@@ -128,3 +128,36 @@ func (r *disbursementRepo) UpdateDisbursement(
 
 	return err
 }
+
+func (r *disbursementRepo) GetPendingDisbursements(
+	ctx context.Context,
+) ([]model.GetPendingDisbursementsOutput, error) {
+	query := `SELECT
+	reference_id,
+	provider_reference_id,
+	provider_id
+	FROM disbursements
+	WHERE status = 'PENDING'`
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return []model.GetPendingDisbursementsOutput{}, err
+	}
+	defer rows.Close()
+
+	var res []model.GetPendingDisbursementsOutput
+	for rows.Next() {
+		var out model.GetPendingDisbursementsOutput
+		err := rows.Scan(&out.ReferenceId, &out.ProviderReferenceId, &out.ProviderId)
+		if err != nil {
+			return []model.GetPendingDisbursementsOutput{}, err
+		}
+		res = append(res, out)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []model.GetPendingDisbursementsOutput{}, err
+	}
+
+	return res, nil
+}

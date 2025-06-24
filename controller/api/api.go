@@ -4,11 +4,7 @@ import (
 	"letspay/common/constants"
 	"letspay/controller/middleware"
 	"letspay/model"
-	"letspay/repository/database"
-	"letspay/repository/provider"
 	"letspay/usecase"
-	"log"
-	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
@@ -37,15 +33,11 @@ func NewAPI(
 
 func HandleRequests(
 	cfg model.AppConfig,
-	disbursementRepo database.DisbursementRepo,
-	userRepo database.UserRepo,
-	providerRepo map[int]provider.ProviderRepo,
-) {
+	disbursementUC usecase.DisbursementUsecase,
+	userUC usecase.UserUsecase,
+) *mux.Router {
 	validate := validator.New()
 	router := mux.NewRouter().StrictSlash(true)
-
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
-	userUC := usecase.NewUserUsecase(userRepo)
 
 	apiModule := NewAPI(
 		cfg,
@@ -66,6 +58,5 @@ func HandleRequests(
 	callback := router.PathPrefix(constants.CALLBACK).Subrouter()
 	callback.HandleFunc(constants.DISBURSEMENT+"/{provider}", apiModule.CallbackDisbursement)
 
-	log.Println("API listening on port: " + cfg.Server.Port)
-	http.ListenAndServe(":"+cfg.Server.Port, router)
+	return router
 }

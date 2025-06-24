@@ -76,4 +76,10 @@ type (
 		FailureCode             string `json:"failure_code,omitempty"`
 		IsInstant               bool   `json:"is_instant"`
 	}
+
+	GetPendingDisbursementsOutput struct {
+		ReferenceId         string `json:"reference_id" db:"reference_id"`
+		ProviderReferenceId string `json:"provider_reference_id" db:"provider_reference_id"`
+		ProviderId          int    `json:"provider_id" db:"provider_id"`
+	}
 )

@@ -46,9 +46,9 @@ func (u disbursementUsecase) GetDisbursement(
 
 		if provResp.Status != resp.Status {
 			err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
-				ReferenceId:         provResp.ReferenceId,
-				ProviderId:          constants.XENDIT_PROVIDER_ID,
-				ProviderReferenceId: provResp.ProviderReferenceId,
+				ReferenceId:         resp.ReferenceId,
+				ProviderId:          resp.ProviderId,
+				ProviderReferenceId: resp.ProviderReferenceId,
 				Status:              provResp.Status,
 				UpdatedAt:           time.Now(),
 				FailureCode:         provResp.FailureReason,
@@ -233,4 +233,38 @@ func (u disbursementUsecase) CallbackValidateToken(
 		)
 	}
 	return false
+}
+
+func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
+	ctx context.Context,
+) (int, error) {
+	disbursements, err := u.disbursementRepo.GetPendingDisbursements(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	count := 0
+	for _, d := range disbursements {
+		provResp, err := u.providerRepo[d.ProviderId].GetDisbursementStatus(ctx, d.ProviderReferenceId)
+		if err != nil {
+			log.Println("usecase check pending provider err:", err)
+			continue
+		}
+
+		err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+			ReferenceId:         d.ReferenceId,
+			ProviderId:          d.ProviderId,
+			ProviderReferenceId: d.ProviderReferenceId,
+			Status:              provResp.Status,
+			UpdatedAt:           time.Now(),
+			FailureCode:         provResp.FailureReason,
+		})
+		if err != nil {
+			log.Println("usecase check pending update DB err:", err)
+			continue
+		}
+		count++
+	}
+
+	return count, nil
 }

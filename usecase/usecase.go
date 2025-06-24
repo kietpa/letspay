@@ -31,6 +31,9 @@ type (
 		CallbackValidateToken(
 			ctx context.Context, headers http.Header, provider string,
 		) bool
+		CheckAndUpdatePendingDisbursements(
+			ctx context.Context,
+		) (int, error)
 	}
 
 	UserUsecase interface {
