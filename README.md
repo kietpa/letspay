@@ -17,9 +17,11 @@ change port if needed
 - [x] struct validation
 - [x] user system with JWT auth
 - [x] Basic disbursement system (create, get status, webhook)
-- [ ] cron to check & update disbursement status
+- [x] cron to check & update disbursement status
 - [ ] handle race conditions (idempotency, redis, callback retries)
+- [ ] add other provider (midtrans) and implement switching
 - [ ] improved logging with grafana/elk
 - [ ] add api documentation & improve readme (table of contents, etc)
 - [ ] improved error handling (handle provider response, database errors, catch panics)
-- [ ] handle timeouts
+- [ ] handle context timeouts
+- [ ] split into microservices?
