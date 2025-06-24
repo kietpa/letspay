@@ -27,6 +27,9 @@ type (
 		UpdateDisbursement(
 			ctx context.Context, updateDisbursementInput model.UpdateDisbursementInput,
 		) error
+		GetPendingDisbursements(
+			ctx context.Context,
+		) ([]model.GetPendingDisbursementsOutput, error)
 	}
 
 	UserRepo interface {

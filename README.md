@@ -11,14 +11,15 @@ Simple payment aggregator app that's still being worked on. Currently a monolith
 change port if needed
 3. add credentials in the env file
 4. run the app
+5. deploy app on ngrok (so providers can communicate)
 
 # To do
 - [x] struct validation
 - [x] user system with JWT auth
-- [x] Basic disbursement system
-- [ ] scheduler system to check & update disbursement status
+- [x] Basic disbursement system (create, get status, webhook)
+- [ ] cron to check & update disbursement status
+- [ ] handle race conditions (idempotency, redis, callback retries)
 - [ ] improved logging with grafana/elk
 - [ ] add api documentation & improve readme (table of contents, etc)
 - [ ] improved error handling (handle provider response, database errors, catch panics)
 - [ ] handle timeouts
-- [ ] handle race conditions
