@@ -17,21 +17,34 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	_ "letspay/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+//	@title			Letspay
+//	@version		1.0
+//	@description	Payment Aggregator App
+
+//	@contact.name	Kiet Asmara
+//	@contact.url	https://kietpa.github.io/
+//	@contact.email	kiet123pascal@gmail.com
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host	localhost:8080
 func main() {
-	// config
 	cfg := config.InitConfig()
 
-	// logger
-	// redis & DB
+	// TODO: logger
+	// TODO: redis
 	db := config.InitDB()
 	defer db.Close()
 
-	// init repo with DB instance
 	disbursementRepo := database.NewDisbursementRepo(db)
 	userRepo := database.NewUserRepo(db)
-
 	xenditRepo := xendit.NewProviderRepo(
 		xendit.NewProviderRepoInput{
 			BaseUrl:       cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
@@ -39,7 +52,6 @@ func main() {
 			CallbackToken: cfg.Provider[constants.XENDIT_PROVIDER_ID].CallbackToken,
 		},
 	)
-
 	providerRepo := map[int]provider.ProviderRepo{
 		constants.XENDIT_PROVIDER_ID: xenditRepo,
 	}
@@ -47,16 +59,15 @@ func main() {
 	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
 	userUC := usecase.NewUserUsecase(userRepo)
 
-	// scheduler
 	scheduler := scheduler.NewScheduler(disbursementUC)
 	scheduler.RegisterJobs()
 
-	// mssg queue
+	// TODO: mssg queue
 
-	// routing/handler
 	router := api.HandleRequests(cfg, disbursementUC, userUC)
 
-	// start server
+	router.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
+
 	server := &http.Server{
 		Addr:    ":" + cfg.Server.Port,
 		Handler: router,
@@ -98,7 +109,6 @@ func main() {
 		log.Printf("HTTP server shutdown error: %v", err)
 	}
 
-	// Stop cron scheduler and wait for running jobs
 	cronStopCtx := scheduler.Stop()
 	select {
 	case <-cronStopCtx.Done():

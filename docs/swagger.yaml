@@ -1,0 +1,259 @@
+definitions:
+  helper.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  model.CreateDisbursementRequest:
+    properties:
+      amount:
+        minimum: 5000
+        type: number
+      bank_account_name:
+        type: string
+      bank_account_number:
+        type: string
+      bank_code:
+        type: string
+      description:
+        type: string
+      user_reference_id:
+        maxLength: 15
+        type: string
+    required:
+    - amount
+    - bank_account_name
+    - bank_account_number
+    - bank_code
+    - description
+    - user_reference_id
+    type: object
+  model.DisbursementDetail:
+    properties:
+      amount:
+        type: number
+      bankAccountName:
+        type: string
+      bankAccountNumber:
+        type: string
+      bankCode:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      failureCode:
+        type: string
+      referenceId:
+        type: string
+      status:
+        type: string
+      userReferenceId:
+        type: string
+    type: object
+  model.Error:
+    properties:
+      code:
+        type: integer
+      errors:
+        items:
+          $ref: '#/definitions/helper.ValidationError'
+        type: array
+      message:
+        type: string
+    type: object
+  model.LoginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  model.LoginUserResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  model.RegisterUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        minLength: 4
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  model.UserDetail:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: kiet123pascal@gmail.com
+    name: Kiet Asmara
+    url: https://kietpa.github.io/
+  description: Payment Aggregator App
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Letspay
+  version: "1.0"
+paths:
+  /disbursement:
+    post:
+      consumes:
+      - application/json
+      description: Create a disbursement transaction
+      parameters:
+      - description: JWT Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: The input body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateDisbursementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DisbursementDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Create Disbursement
+      tags:
+      - Disbursement
+  /disbursement/{referenceid}:
+    get:
+      consumes:
+      - application/json
+      description: Get disbursement transaction by reference ID
+      parameters:
+      - description: reference id
+        in: path
+        name: ID
+        required: true
+        type: integer
+      - description: JWT Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.DisbursementDetail'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Get Disbursement
+      tags:
+      - Disbursement
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Login and receive an access token
+      parameters:
+      - description: The input body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LoginUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Login
+      tags:
+      - User
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a user
+      parameters:
+      - description: The input body
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UserDetail'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Error'
+      summary: Register
+      tags:
+      - User
+swagger: "2.0"
