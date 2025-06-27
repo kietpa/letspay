@@ -10,6 +10,7 @@ const (
 	REQUEST_HEADERS = "headers"
 	PROVIDER        = "provider"
 	USER_ID         = "user_id"
+	PROCESS_ID      = "ProcessID"
 
 	STATUS_PENDING   = "PENDING"
 	STATUS_COMPLETED = "COMPLETED"

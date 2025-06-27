@@ -9,6 +9,7 @@ import (
 	"letspay/repository/provider"
 	"letspay/repository/provider/xendit"
 	"letspay/scheduler"
+	"letspay/tool/logger"
 	"letspay/usecase"
 	"log"
 	"net/http"
@@ -38,10 +39,25 @@ import (
 func main() {
 	cfg := config.InitConfig()
 
-	// TODO: logger
 	// TODO: redis
 	db := config.InitDB()
 	defer db.Close()
+
+	// logCustom := zlog.With().Timestamp().Logger()
+
+	logCustom := logger.New(
+		logger.Config{
+			FilePath:   "var/log/app.log", //TODO: tidy this up
+			MaxSizeMB:  100,
+			MaxBackups: 2,
+			MaxAgeDays: 28,
+			Compress:   false,
+			LokiURL:    "http://loki:3100/loki/api/v1/push",
+			LokiLabels: map[string]string{
+				"app": "letspay",
+			},
+		},
+	)
 
 	disbursementRepo := database.NewDisbursementRepo(db)
 	userRepo := database.NewUserRepo(db)
@@ -56,20 +72,20 @@ func main() {
 		constants.XENDIT_PROVIDER_ID: xenditRepo,
 	}
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
-	userUC := usecase.NewUserUsecase(userRepo)
+	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, logCustom)
+	userUC := usecase.NewUserUsecase(userRepo, logCustom)
 
-	scheduler := scheduler.NewScheduler(disbursementUC)
+	scheduler := scheduler.NewScheduler(disbursementUC, logCustom)
 	scheduler.RegisterJobs()
 
 	// TODO: mssg queue
 
-	router := api.HandleRequests(cfg, disbursementUC, userUC)
+	router := api.HandleRequests(cfg, disbursementUC, userUC, logCustom)
 
 	router.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
 
 	server := &http.Server{
-		Addr:    ":" + cfg.Server.Port,
+		Addr:    "0.0.0.0:" + cfg.Server.Port, // set to 0.0.0.0 so docker can listen
 		Handler: router,
 	}
 

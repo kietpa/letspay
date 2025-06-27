@@ -6,16 +6,20 @@ import (
 	"letspay/repository/database"
 	"letspay/repository/provider"
 	"net/http"
+
+	"github.com/rs/zerolog"
 )
 
 type (
 	disbursementUsecase struct {
 		disbursementRepo database.DisbursementRepo
 		providerRepo     map[int]provider.ProviderRepo
+		logger           zerolog.Logger
 	}
 
 	userUsecase struct {
 		userRepo database.UserRepo
+		logger   zerolog.Logger
 	}
 
 	DisbursementUsecase interface {

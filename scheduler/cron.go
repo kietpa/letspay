@@ -6,15 +6,18 @@ import (
 	"letspay/usecase"
 
 	"github.com/robfig/cron/v3"
+	"github.com/rs/zerolog"
 )
 
 type Scheduler struct {
 	cron                *cron.Cron
 	disbursementUsecase usecase.DisbursementUsecase
+	logger              zerolog.Logger
 }
 
 func NewScheduler(
 	disbursementUsecase usecase.DisbursementUsecase,
+	logger zerolog.Logger,
 ) *Scheduler {
 	c := cron.New(cron.WithChain(
 		cron.Recover(cron.DefaultLogger), // panic
@@ -23,6 +26,7 @@ func NewScheduler(
 	return &Scheduler{
 		cron:                c,
 		disbursementUsecase: disbursementUsecase,
+		logger:              logger,
 	}
 }
 

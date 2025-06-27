@@ -13,19 +13,24 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog"
 )
 
 type disbursementApi struct {
 	disbursementUC usecase.DisbursementUsecase
 	validate       validator.Validate
+	logger         zerolog.Logger
 }
 
 func NewDisbursementAPI(
-	dibursementUC usecase.DisbursementUsecase, validate validator.Validate,
+	dibursementUC usecase.DisbursementUsecase,
+	validate validator.Validate,
+	logger zerolog.Logger,
 ) *disbursementApi {
 	return &disbursementApi{
 		disbursementUC: dibursementUC,
 		validate:       validate,
+		logger:         logger,
 	}
 }
 
