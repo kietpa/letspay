@@ -8,29 +8,26 @@ import (
 	"letspay/controller"
 	"letspay/model"
 	"letspay/tool/helper"
+	"letspay/tool/logger"
 	"letspay/usecase"
 	"net/http"
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/rs/zerolog"
 )
 
 type disbursementApi struct {
 	disbursementUC usecase.DisbursementUsecase
 	validate       validator.Validate
-	logger         zerolog.Logger
 }
 
 func NewDisbursementAPI(
 	dibursementUC usecase.DisbursementUsecase,
 	validate validator.Validate,
-	logger zerolog.Logger,
 ) *disbursementApi {
 	return &disbursementApi{
 		disbursementUC: dibursementUC,
 		validate:       validate,
-		logger:         logger,
 	}
 }
 
@@ -57,7 +54,7 @@ func (a *disbursementApi) CreateDisbursement(
 	request := model.CreateDisbursementRequest{}
 
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
-		fmt.Println("create disbursement unmarshal error: ", err)
+		logger.Error(ctx, fmt.Sprint("[Create Disbursement - API] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -65,7 +62,7 @@ func (a *disbursementApi) CreateDisbursement(
 	}
 
 	if validationErrors := helper.ValidateStruct(request, a.validate); len(validationErrors) > 0 {
-		fmt.Println("create disbursement validation error: ", validationErrors)
+		logger.Error(ctx, fmt.Sprint("[Create Disbursement - API] validation error: ", validationErrors))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.VALIDATION_ERROR,
@@ -94,7 +91,7 @@ func (a *disbursementApi) CallbackDisbursement(
 	var decodedHeaders http.Header
 
 	if err := json.Unmarshal([]byte(param[constants.REQUEST_HEADERS]), &decodedHeaders); err != nil {
-		fmt.Println("callback disbursement unmarshal error: ", err)
+		logger.Error(ctx, fmt.Sprint("[Callback Disbursement - API] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -111,7 +108,7 @@ func (a *disbursementApi) CallbackDisbursement(
 	// TODO: handle idempotency with redis
 
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &body); err != nil {
-		fmt.Println("callback disbursement unmarshal error: ", err)
+		logger.Error(ctx, fmt.Sprint("[Callback Disbursement - API] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
