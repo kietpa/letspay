@@ -7,7 +7,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/main .
 COPY .env .env
-COPY configs configs
+COPY config config
 
 CMD ["./main"]
 
