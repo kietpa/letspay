@@ -9,13 +9,17 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 func NewUserUsecase(
 	userRepo database.UserRepo,
+	logger zerolog.Logger,
 ) UserUsecase {
 	return &userUsecase{
 		userRepo: userRepo,
+		logger:   logger,
 	}
 }
 

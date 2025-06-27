@@ -7,6 +7,7 @@ import (
 	"letspay/common/constants"
 	"letspay/controller"
 	"letspay/model"
+	"letspay/tool/util"
 	"net/http"
 	"strconv"
 
@@ -140,6 +141,8 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 	response := controller.Data{}
 	err := model.Error{}
 	ctx := context.Background()
+
+	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
 
 	switch r.Method {
 	case http.MethodPost:

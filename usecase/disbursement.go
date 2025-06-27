@@ -10,15 +10,19 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 func NewDisbursementUsecase(
 	disbursementRepo database.DisbursementRepo,
 	providerRepo map[int]provider.ProviderRepo,
+	logger zerolog.Logger,
 ) DisbursementUsecase {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
 		providerRepo:     providerRepo,
+		logger:           logger,
 	}
 }
 

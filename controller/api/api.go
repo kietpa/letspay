@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog"
 )
 
 type (
@@ -15,6 +16,7 @@ type (
 		config          model.AppConfig
 		disbursementApi *disbursementApi
 		userApi         *userApi
+		logger          zerolog.Logger
 	}
 )
 
@@ -23,11 +25,13 @@ func NewAPI(
 	disbursementUC usecase.DisbursementUsecase,
 	userUC usecase.UserUsecase,
 	validate validator.Validate,
+	logger zerolog.Logger,
 ) *ApiModule {
 	return &ApiModule{
 		config:          config,
-		disbursementApi: NewDisbursementAPI(disbursementUC, validate),
-		userApi:         NewUserApi(userUC, validate),
+		disbursementApi: NewDisbursementAPI(disbursementUC, validate, logger),
+		userApi:         NewUserApi(userUC, validate, logger),
+		logger:          logger,
 	}
 }
 
@@ -35,6 +39,7 @@ func HandleRequests(
 	cfg model.AppConfig,
 	disbursementUC usecase.DisbursementUsecase,
 	userUC usecase.UserUsecase,
+	logger zerolog.Logger,
 ) *mux.Router {
 	validate := validator.New()
 	router := mux.NewRouter().StrictSlash(true)
@@ -44,6 +49,7 @@ func HandleRequests(
 		disbursementUC,
 		userUC,
 		*validate,
+		logger,
 	)
 
 	user := router.PathPrefix(constants.USER).Subrouter()

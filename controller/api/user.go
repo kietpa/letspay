@@ -12,19 +12,24 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog"
 )
 
 type userApi struct {
 	userUC   usecase.UserUsecase
 	validate validator.Validate
+	logger   zerolog.Logger
 }
 
 func NewUserApi(
-	userUC usecase.UserUsecase, validate validator.Validate,
+	userUC usecase.UserUsecase,
+	validate validator.Validate,
+	logger zerolog.Logger,
 ) *userApi {
 	return &userApi{
 		userUC:   userUC,
 		validate: validate,
+		logger:   logger,
 	}
 }
 
@@ -35,7 +40,7 @@ func (a *userApi) RegisterUser(
 	request := model.RegisterUserRequest{}
 
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
-		fmt.Println("register user unmarshal error: ", err)
+		a.logger.Info().Msg(fmt.Sprintf("[register user] unmarshal error: %s", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -84,6 +89,8 @@ func (a *userApi) LoginUser(
 			Errors:  validationErrors,
 		}
 	}
+
+	a.logger.Info().Msg(fmt.Sprintf("[Login User] Successfully passed"))
 
 	userResponse, err := a.userUC.LoginUser(ctx, request)
 	if err.Code != 0 {

@@ -13,12 +13,58 @@ services:
       - "5372:5432"
     networks:
       - db
+      - monitoring
     restart: unless-stopped
+
+  app:
+    user: root
+    build: .
+    container_name: letspay-app
+    depends_on:
+      - db
+    env_file: .env
+    labels: { logging: "promtail" }
+    ports:
+      - "8080:8080"
+    networks:
+      - db
+    restart: unless-stopped
+
+  # Monitoring stack
+  loki:
+    image: grafana/loki:3.3.2
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes: [./data/loki:/loki]
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:3.3.2
+    command: -config.file=/etc/promtail/docker-config.yaml
+    volumes:
+      - ./config/promtail.yaml:/etc/promtail/docker-config.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on: [loki]
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports: [3000:3000]
+    volumes:
+      - ./config/grafana.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - monitoring
 
 networks:
   db:
+    driver: bridge
+  monitoring:
     driver: bridge
 
 volumes:
   db:
     driver: local
+
+    
