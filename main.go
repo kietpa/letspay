@@ -36,9 +36,8 @@ import (
 
 // @host	localhost:8080
 func main() {
-	cfg := config.InitConfig()
+	cfg := config.InitConfig() // to debug, we have to rebuild from scratch with docker rmi letspay-app
 
-	// TODO: logger
 	// TODO: redis
 	db := config.InitDB()
 	defer db.Close()
@@ -69,7 +68,7 @@ func main() {
 	router.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
 
 	server := &http.Server{
-		Addr:    ":" + cfg.Server.Port,
+		Addr:    "0.0.0.0:" + cfg.Server.Port, // set to 0.0.0.0 so docker can listen
 		Handler: router,
 	}
 

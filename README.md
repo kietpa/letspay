@@ -8,11 +8,10 @@ Stack: Go, PostgreSQL, gorilla/mux, pgx
 - Scheduler to update pending disbursements
 
 # How to Start
-1. docker compose up -d
-2. run migrations:
+1. add credentials in the env file
+2. docker compose up -d
+3. run migrations:
     goose -dir migrations postgres "user=letsuser password=letspassword dbname=letspay port=5372 sslmode=disable" up
-3. add credentials in the env file
-4. run the app
 
 ### To test webhooks:
 1. deploy app and expose it (eg: port forwarding) 

@@ -2,12 +2,13 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"letspay/common/constants"
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/repository/provider"
+	"letspay/tool/logger"
 	"letspay/tool/util"
-	"log"
 	"net/http"
 	"time"
 )
@@ -27,7 +28,10 @@ func (u disbursementUsecase) GetDisbursement(
 ) (model.DisbursementDetail, model.Error) {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, refid)
 	if err != nil {
-		log.Println("usecase get disb repo err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] repo get disbursement DB error: %s refid=%s",
+			err,
+			refid,
+		))
 		return model.DisbursementDetail{}, model.Error{
 			Code:    http.StatusNotFound,
 			Message: constants.TRANSACTION_NOT_FOUND_MESSAGE,
@@ -37,7 +41,10 @@ func (u disbursementUsecase) GetDisbursement(
 	if resp.Status == "PENDING" {
 		provResp, err := u.providerRepo[resp.ProviderId].GetDisbursementStatus(ctx, resp.ProviderReferenceId)
 		if err != nil {
-			log.Println("usecase get disb provider err:", err)
+			logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] provider get status error: %s refid=%s",
+				err,
+				refid,
+			))
 			return model.DisbursementDetail{}, model.Error{
 				Code:    http.StatusInternalServerError,
 				Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -54,7 +61,10 @@ func (u disbursementUsecase) GetDisbursement(
 				FailureCode:         provResp.FailureReason,
 			})
 			if err != nil {
-				log.Println("usecase get disb provider update DB err:", err)
+				logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] provider update DB error: %s refid=%s",
+					err,
+					refid,
+				))
 				return model.DisbursementDetail{}, model.Error{
 					Code:    http.StatusInternalServerError,
 					Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -114,7 +124,10 @@ func (u disbursementUsecase) CreateDisbursement(
 
 	err := u.disbursementRepo.CreateDisbursement(ctx, input)
 	if err != nil {
-		log.Println("usecase create disb repo err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] repo insert DB error: %s refid=%s",
+			err,
+			input.ReferenceId,
+		))
 		return model.DisbursementDetail{}, model.Error{
 			Code:    http.StatusInternalServerError,
 			Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -126,7 +139,10 @@ func (u disbursementUsecase) CreateDisbursement(
 	// execute disbursement to providers
 	resp, err := u.providerRepo[constants.XENDIT_PROVIDER_ID].ExecuteDisbursement(ctx, input)
 	if err != nil {
-		log.Println("usecase create disb provider repo err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] provider execute disbursement error: %s refid=%s",
+			err,
+			input.ReferenceId,
+		))
 		if resp.Status == "FAILED" {
 			err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 				ReferenceId:         input.ReferenceId,
@@ -148,14 +164,20 @@ func (u disbursementUsecase) CreateDisbursement(
 				Message: constants.INTERNAL_ERROR_MESSAGE,
 			}
 		} else {
-			err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+			if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 				ReferenceId:         input.ReferenceId,
 				ProviderId:          0,
 				ProviderReferenceId: "",
 				Status:              "FAILED",
 				UpdatedAt:           time.Now(),
 				FailureCode:         "INTERNAL ERROR",
-			})
+			}); err != nil {
+				logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] provider FAILED execute DB error: %s refid=%s",
+					err,
+					input.ReferenceId,
+				))
+			}
+
 			return model.DisbursementDetail{}, model.Error{
 				Code:    http.StatusInternalServerError,
 				Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -195,7 +217,10 @@ func (u disbursementUsecase) CallbackDisbursement(
 ) model.Error {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, callbackDisbursementRequest.ReferenceId)
 	if err != nil {
-		log.Println("usecase callback disb repo err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Callback Disbursement - Usecase] get disbursement DB error: %s refid=%s",
+			err,
+			callbackDisbursementRequest.ReferenceId,
+		))
 		return model.Error{
 			Code:    http.StatusNotFound,
 			Message: constants.TRANSACTION_NOT_FOUND_MESSAGE,
@@ -212,7 +237,10 @@ func (u disbursementUsecase) CallbackDisbursement(
 			FailureCode:         callbackDisbursementRequest.FailureCode,
 		})
 		if err != nil {
-			log.Println("usecase callback disb provider update DB err:", err)
+			logger.Error(ctx, fmt.Sprintf("[Callback Disbursement - Usecase] update disbursement DB error: %s refid=%s",
+				err,
+				callbackDisbursementRequest.ReferenceId,
+			))
 			return model.Error{
 				Code:    http.StatusInternalServerError,
 				Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -240,14 +268,19 @@ func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 ) (int, error) {
 	disbursements, err := u.disbursementRepo.GetPendingDisbursements(ctx)
 	if err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] get pending disbursements DB error: %s", err))
 		return 0, err
 	}
 
 	count := 0
+	// TODO: make this concurrent
 	for _, d := range disbursements {
 		provResp, err := u.providerRepo[d.ProviderId].GetDisbursementStatus(ctx, d.ProviderReferenceId)
 		if err != nil {
-			log.Println("usecase check pending provider err:", err)
+			logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] provider get disbursement status error: %s refid=%s",
+				err,
+				d.ReferenceId,
+			))
 			continue
 		}
 
@@ -260,7 +293,10 @@ func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 			FailureCode:         provResp.FailureReason,
 		})
 		if err != nil {
-			log.Println("usecase check pending update DB err:", err)
+			logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] update disbursement DB error: %s refid=%s",
+				err,
+				d.ReferenceId,
+			))
 			continue
 		}
 		count++

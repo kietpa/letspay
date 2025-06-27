@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -107,3 +109,26 @@ func SendRequest(config RequestConfig) ([]byte, int, error) {
 
 // 	return statusCode, nil
 // }
+
+func GetIP(r *http.Request) string {
+	// Check X-Forwarded-For
+	forwarded := r.Header.Get("X-Forwarded-For")
+	if forwarded != "" {
+		// This may contain multiple IPs; the first is the client
+		ips := strings.Split(forwarded, ",")
+		return strings.TrimSpace(ips[0])
+	}
+
+	// Check X-Real-IP
+	realIP := r.Header.Get("X-Real-IP")
+	if realIP != "" {
+		return realIP
+	}
+
+	// Fallback to RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}

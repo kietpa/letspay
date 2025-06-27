@@ -2,11 +2,12 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"letspay/common/constants"
 	"letspay/model"
 	"letspay/repository/database"
+	"letspay/tool/logger"
 	"letspay/tool/util"
-	"log"
 	"net/http"
 	"time"
 )
@@ -25,7 +26,10 @@ func (u userUsecase) RegisterUser(
 	//check if user exists
 	_, err := u.userRepo.GetUserByEmail(ctx, registerUserRequest.Email)
 	if err == nil {
-		log.Println("usecase register user check user err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] check user email conflict: %s email=%s",
+			err,
+			registerUserRequest.Email,
+		))
 		return model.UserDetail{}, model.Error{
 			Code:    http.StatusConflict,
 			Message: constants.INVALID_EMAIL_MESSAGE,
@@ -34,7 +38,10 @@ func (u userUsecase) RegisterUser(
 
 	hashedPass, err := util.HashPassword(registerUserRequest.Password)
 	if err != nil {
-		log.Println("usecase register user hash err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] password hash error: %s email=%s",
+			err,
+			registerUserRequest.Email,
+		))
 		return model.UserDetail{}, model.Error{
 			Code:    http.StatusInternalServerError,
 			Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -48,7 +55,10 @@ func (u userUsecase) RegisterUser(
 		CreatedAt:      time.Now(),
 	})
 	if err != nil {
-		log.Println("usecase register user register user err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] repo error: %s email=%s",
+			err,
+			registerUserRequest.Email,
+		))
 		return model.UserDetail{}, model.Error{
 			Code:    http.StatusInternalServerError,
 			Message: constants.INTERNAL_ERROR_MESSAGE,
@@ -66,7 +76,10 @@ func (u userUsecase) LoginUser(
 ) (model.LoginUserResponse, model.Error) {
 	user, err := u.userRepo.GetUserByEmail(ctx, loginUserRequest.Email)
 	if err != nil {
-		log.Println("usecase login user check user err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] check user DB error: %s email=%s",
+			err,
+			loginUserRequest.Email,
+		))
 		return model.LoginUserResponse{}, model.Error{
 			Code:    http.StatusNotFound,
 			Message: constants.INVALID_EMAIL_MESSAGE,
@@ -74,7 +87,10 @@ func (u userUsecase) LoginUser(
 	}
 
 	if !util.CheckPassword(loginUserRequest.Password, user.HashedPassword) {
-		log.Println("usecase login user check password err: invalid password")
+		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] invalid password error: %s email=%s",
+			err,
+			loginUserRequest.Email,
+		))
 		return model.LoginUserResponse{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_EMAIL_MESSAGE,
@@ -83,7 +99,11 @@ func (u userUsecase) LoginUser(
 
 	token, err := util.GenerateToken(&user)
 	if err != nil {
-		log.Println("usecase login user generate token err:", err)
+		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] generate token error: %s email=%s userid=%d",
+			err,
+			loginUserRequest.Email,
+			user.UserId,
+		))
 		return model.LoginUserResponse{}, model.Error{
 			Code:    http.StatusInternalServerError,
 			Message: constants.INTERNAL_ERROR_MESSAGE,
