@@ -16,7 +16,5 @@ const (
 	STATUS_COMPLETED = "COMPLETED"
 	STATUS_FAILED    = "FAILED"
 
-	// xendit constants
-	X_CALLBACK_TOKEN = "x-callback-token"
-	WEBHOOK_ID       = "webhook-id"
+	WEBHOOK_ID = "webhook-id"
 )

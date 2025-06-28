@@ -37,5 +37,10 @@ func InitConfig() model.AppConfig {
 		Provider: map[int]model.Provider{
 			constants.XENDIT_PROVIDER_ID: xenditProvider,
 		},
+		Redis: model.Redis{
+			Host:     os.Getenv("REDIS_HOST"),
+			Port:     os.Getenv("REDIS_PORT"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+		},
 	}
 }

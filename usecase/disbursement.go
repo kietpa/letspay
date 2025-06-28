@@ -8,6 +8,7 @@ import (
 	"letspay/repository/database"
 	"letspay/repository/provider"
 	"letspay/tool/logger"
+	"letspay/tool/redis"
 	"letspay/tool/util"
 	"net/http"
 	"time"
@@ -16,10 +17,12 @@ import (
 func NewDisbursementUsecase(
 	disbursementRepo database.DisbursementRepo,
 	providerRepo map[int]provider.ProviderRepo,
+	redisRepo *redis.RedisClient,
 ) DisbursementUsecase {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
 		providerRepo:     providerRepo,
+		redisRepo:        redisRepo,
 	}
 }
 
@@ -28,7 +31,7 @@ func (u disbursementUsecase) GetDisbursement(
 ) (model.DisbursementDetail, model.Error) {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, refid)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] repo get disbursement DB error: %s refid=%s",
+		logger.Error(ctx, fmt.Sprintf("[Get Disbursement] repo get disbursement DB error=%s refid=%s",
 			err,
 			refid,
 		))
@@ -41,7 +44,7 @@ func (u disbursementUsecase) GetDisbursement(
 	if resp.Status == "PENDING" {
 		provResp, err := u.providerRepo[resp.ProviderId].GetDisbursementStatus(ctx, resp.ProviderReferenceId)
 		if err != nil {
-			logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] provider get status error: %s refid=%s",
+			logger.Error(ctx, fmt.Sprintf("[Get Disbursement] provider get status error=%s refid=%s",
 				err,
 				refid,
 			))
@@ -61,7 +64,7 @@ func (u disbursementUsecase) GetDisbursement(
 				FailureCode:         provResp.FailureReason,
 			})
 			if err != nil {
-				logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Usecase] provider update DB error: %s refid=%s",
+				logger.Error(ctx, fmt.Sprintf("[Get Disbursement] provider update DB error=%s refid=%s",
 					err,
 					refid,
 				))
@@ -104,11 +107,10 @@ func (u disbursementUsecase) GetDisbursement(
 // 1. create disbursement record in DB
 // 2. execute disbursement to providers
 // 3. record final status, respond to user
-// 4. if no final status available, set to pending
+// 4. if no final status available, set to pending/hanging
 func (u disbursementUsecase) CreateDisbursement(
 	ctx context.Context, createDisbursementRequest model.CreateDisbursementRequest, userId int,
 ) (model.DisbursementDetail, model.Error) {
-
 	input := model.CreateDisbursementInput{
 		UserId:            userId,
 		ReferenceId:       util.GenerateReferenceId(),
@@ -122,9 +124,15 @@ func (u disbursementUsecase) CreateDisbursement(
 		Description:       createDisbursementRequest.Description,
 	}
 
+	logger.Info(ctx, fmt.Sprintf(
+		"[Create Disbursement] Creating disbursement refid=%s body=%+v",
+		input.ReferenceId,
+		input,
+	))
+
 	err := u.disbursementRepo.CreateDisbursement(ctx, input)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] repo insert DB error: %s refid=%s",
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] repo insert DB error=%s refid=%s",
 			err,
 			input.ReferenceId,
 		))
@@ -139,19 +147,29 @@ func (u disbursementUsecase) CreateDisbursement(
 	// execute disbursement to providers
 	resp, err := u.providerRepo[constants.XENDIT_PROVIDER_ID].ExecuteDisbursement(ctx, input)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] provider execute disbursement error: %s refid=%s",
+		// TODO: if transaction exceed timeout without final error status,
+		// respond to user with pending/stuck/hanging status
+		// if errors.Is(err, context.DeadlineExceeded) {
+		// }
+
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] provider execute disbursement error=%s refid=%s",
 			err,
 			input.ReferenceId,
 		))
 		if resp.Status == "FAILED" {
-			err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+			if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 				ReferenceId:         input.ReferenceId,
 				ProviderId:          constants.XENDIT_PROVIDER_ID,
 				ProviderReferenceId: resp.ProviderReferenceId,
 				Status:              resp.Status,
 				UpdatedAt:           time.Now(),
 				FailureCode:         resp.FailureCode,
-			})
+			}); err != nil {
+				logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
+					err,
+					input.ReferenceId,
+				))
+			}
 
 			if resp.StatusCode == http.StatusBadRequest {
 				return model.DisbursementDetail{}, model.Error{
@@ -172,7 +190,7 @@ func (u disbursementUsecase) CreateDisbursement(
 				UpdatedAt:           time.Now(),
 				FailureCode:         "INTERNAL ERROR",
 			}); err != nil {
-				logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Usecase] provider FAILED execute DB error: %s refid=%s",
+				logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
 					err,
 					input.ReferenceId,
 				))
@@ -184,19 +202,19 @@ func (u disbursementUsecase) CreateDisbursement(
 			}
 		}
 	}
-
-	err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+	if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 		ReferenceId:         input.ReferenceId,
 		ProviderId:          constants.XENDIT_PROVIDER_ID,
 		ProviderReferenceId: resp.ProviderReferenceId,
 		Status:              resp.Status,
 		UpdatedAt:           time.Now(),
 		FailureCode:         resp.FailureCode,
-	})
-
-	// TODO: if transaction exceed timeout without final error status,
-	// respond to user with pending status
-	// TODO: add scheduler to check status to provider for pending transactions
+	}); err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
+			err,
+			input.ReferenceId,
+		))
+	}
 
 	return model.DisbursementDetail{
 		ReferenceId:       input.ReferenceId,
@@ -217,7 +235,8 @@ func (u disbursementUsecase) CallbackDisbursement(
 ) model.Error {
 	resp, err := u.disbursementRepo.GetDisbursement(ctx, callbackDisbursementRequest.ReferenceId)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Callback Disbursement - Usecase] get disbursement DB error: %s refid=%s",
+		logger.Error(ctx, fmt.Sprintf(
+			"[Callback Disbursement] get disbursement DB error=%s refid=%s",
 			err,
 			callbackDisbursementRequest.ReferenceId,
 		))
@@ -228,6 +247,11 @@ func (u disbursementUsecase) CallbackDisbursement(
 	}
 
 	if callbackDisbursementRequest.Status != resp.Status {
+		logger.Info(ctx, fmt.Sprintf(
+			"[Callback Disbursement] Status mismatch providerStatus=%s internalStatus=%s",
+			callbackDisbursementRequest.Status,
+			resp.Status,
+		))
 		err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 			ReferenceId:         resp.ReferenceId,
 			ProviderId:          resp.ProviderId,
@@ -237,7 +261,8 @@ func (u disbursementUsecase) CallbackDisbursement(
 			FailureCode:         callbackDisbursementRequest.FailureCode,
 		})
 		if err != nil {
-			logger.Error(ctx, fmt.Sprintf("[Callback Disbursement - Usecase] update disbursement DB error: %s refid=%s",
+			logger.Error(ctx, fmt.Sprintf(
+				"[Callback Disbursement] update disbursement DB error=%s refid=%s",
 				err,
 				callbackDisbursementRequest.ReferenceId,
 			))
@@ -246,7 +271,18 @@ func (u disbursementUsecase) CallbackDisbursement(
 				Message: constants.INTERNAL_ERROR_MESSAGE,
 			}
 		}
+
+		err = u.redisRepo.Set(ctx, callbackDisbursementRequest.WebhookId, "exists", time.Duration(5*time.Minute))
+		if err != nil {
+			logger.Error(ctx, fmt.Sprintf(
+				"[Callback Disbursement] set key redis error=%s refid=%s",
+				err,
+				callbackDisbursementRequest.ReferenceId,
+			))
+		}
 	}
+
+	logger.Info(ctx, fmt.Sprintf("[Callback Disbursement] Successfully proccessed disbursement refid=%s", resp.ReferenceId))
 
 	return model.Error{}
 }
@@ -254,6 +290,7 @@ func (u disbursementUsecase) CallbackDisbursement(
 func (u disbursementUsecase) CallbackValidateToken(
 	ctx context.Context, headers http.Header, provider string,
 ) bool {
+	logger.Info(ctx, fmt.Sprintf("[Validate Token] validating token"))
 	switch provider {
 	case "xendit":
 		return u.providerRepo[constants.XENDIT_PROVIDER_ID].ValidateCallbackToken(
@@ -266,9 +303,10 @@ func (u disbursementUsecase) CallbackValidateToken(
 func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 	ctx context.Context,
 ) (int, error) {
+	logger.Info(ctx, fmt.Sprintf("[Disbursement Scheduler] getting pending disbursements from DB"))
 	disbursements, err := u.disbursementRepo.GetPendingDisbursements(ctx)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] get pending disbursements DB error: %s", err))
+		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler] get pending disbursements DB error=%s", err))
 		return 0, err
 	}
 
@@ -277,13 +315,19 @@ func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 	for _, d := range disbursements {
 		provResp, err := u.providerRepo[d.ProviderId].GetDisbursementStatus(ctx, d.ProviderReferenceId)
 		if err != nil {
-			logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] provider get disbursement status error: %s refid=%s",
+			logger.Error(ctx, fmt.Sprintf(
+				"[Disbursement Scheduler] provider get disbursement status error=%s refid=%s",
 				err,
 				d.ReferenceId,
 			))
 			continue
 		}
 
+		logger.Info(ctx, fmt.Sprintf(
+			"[Disbursement Scheduler] updating disbursement in DB to %s refid=%s",
+			provResp.Status,
+			d.ReferenceId,
+		))
 		err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 			ReferenceId:         d.ReferenceId,
 			ProviderId:          d.ProviderId,
@@ -293,7 +337,8 @@ func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 			FailureCode:         provResp.FailureReason,
 		})
 		if err != nil {
-			logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler - Usecase] update disbursement DB error: %s refid=%s",
+			logger.Error(ctx, fmt.Sprintf(
+				"[Disbursement Scheduler] update disbursement DB error=%s refid=%s",
 				err,
 				d.ReferenceId,
 			))

@@ -9,6 +9,7 @@ import (
 	"letspay/repository/provider"
 	"letspay/repository/provider/xendit"
 	"letspay/scheduler"
+	"letspay/tool/redis"
 	"letspay/usecase"
 	"log"
 	"net/http"
@@ -36,9 +37,10 @@ import (
 
 // @host	localhost:8080
 func main() {
-	cfg := config.InitConfig() // to debug, we have to rebuild from scratch with docker rmi letspay-app
+	// to debug, we have to rebuild from scratch with docker rmi letspay-app
+	cfg := config.InitConfig()
 
-	// TODO: redis
+	rds := redis.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password)
 	db := config.InitDB()
 	defer db.Close()
 
@@ -49,13 +51,14 @@ func main() {
 			BaseUrl:       cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
 			ApiKey:        cfg.Provider[constants.XENDIT_PROVIDER_ID].ApiKey,
 			CallbackToken: cfg.Provider[constants.XENDIT_PROVIDER_ID].CallbackToken,
+			RedisRepo:     rds,
 		},
 	)
 	providerRepo := map[int]provider.ProviderRepo{
 		constants.XENDIT_PROVIDER_ID: xenditRepo,
 	}
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo)
+	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, rds)
 	userUC := usecase.NewUserUsecase(userRepo)
 
 	scheduler := scheduler.NewScheduler(disbursementUC)

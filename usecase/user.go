@@ -23,10 +23,9 @@ func NewUserUsecase(
 func (u userUsecase) RegisterUser(
 	ctx context.Context, registerUserRequest model.RegisterUserRequest,
 ) (model.UserDetail, model.Error) {
-	//check if user exists
 	_, err := u.userRepo.GetUserByEmail(ctx, registerUserRequest.Email)
 	if err == nil {
-		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] check user email conflict: %s email=%s",
+		logger.Error(ctx, fmt.Sprintf("[Register User] check user email conflict error=%s email=%s",
 			err,
 			registerUserRequest.Email,
 		))
@@ -38,7 +37,7 @@ func (u userUsecase) RegisterUser(
 
 	hashedPass, err := util.HashPassword(registerUserRequest.Password)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] password hash error: %s email=%s",
+		logger.Error(ctx, fmt.Sprintf("[Register User] password hash error=%s email=%s",
 			err,
 			registerUserRequest.Email,
 		))
@@ -55,7 +54,7 @@ func (u userUsecase) RegisterUser(
 		CreatedAt:      time.Now(),
 	})
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Register User - Usecase] repo error: %s email=%s",
+		logger.Error(ctx, fmt.Sprintf("[Register User] repo error=%s email=%s",
 			err,
 			registerUserRequest.Email,
 		))
@@ -74,9 +73,10 @@ func (u userUsecase) RegisterUser(
 func (u userUsecase) LoginUser(
 	ctx context.Context, loginUserRequest model.LoginUserRequest,
 ) (model.LoginUserResponse, model.Error) {
+
 	user, err := u.userRepo.GetUserByEmail(ctx, loginUserRequest.Email)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] check user DB error: %s email=%s",
+		logger.Error(ctx, fmt.Sprintf("[Login User] check user DB error=%s email=%s",
 			err,
 			loginUserRequest.Email,
 		))
@@ -87,7 +87,7 @@ func (u userUsecase) LoginUser(
 	}
 
 	if !util.CheckPassword(loginUserRequest.Password, user.HashedPassword) {
-		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] invalid password error: %s email=%s",
+		logger.Error(ctx, fmt.Sprintf("[Login User] invalid password error=%s email=%s",
 			err,
 			loginUserRequest.Email,
 		))
@@ -99,7 +99,7 @@ func (u userUsecase) LoginUser(
 
 	token, err := util.GenerateToken(&user)
 	if err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Login User - Usecase] generate token error: %s email=%s userid=%d",
+		logger.Error(ctx, fmt.Sprintf("[Login User] generate token error=%s email=%s userid=%d",
 			err,
 			loginUserRequest.Email,
 			user.UserId,

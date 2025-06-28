@@ -6,6 +6,7 @@ type (
 	AppConfig struct {
 		Server   Server
 		Provider map[int]Provider
+		Redis    Redis
 	}
 
 	Provider struct {
@@ -18,5 +19,11 @@ type (
 	Server struct {
 		Port    string
 		Timeout int
+	}
+
+	Redis struct {
+		Host     string
+		Port     string
+		Password string
 	}
 )

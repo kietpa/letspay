@@ -5,6 +5,7 @@ import (
 	"letspay/model"
 	"letspay/repository/database"
 	"letspay/repository/provider"
+	"letspay/tool/redis"
 	"net/http"
 )
 
@@ -12,6 +13,7 @@ type (
 	disbursementUsecase struct {
 		disbursementRepo database.DisbursementRepo
 		providerRepo     map[int]provider.ProviderRepo
+		redisRepo        *redis.RedisClient
 	}
 
 	userUsecase struct {

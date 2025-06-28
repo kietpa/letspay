@@ -35,11 +35,20 @@ func (a *disbursementApi) GetDisbursement(
 	ctx context.Context, param map[string]string,
 ) (controller.Data, model.Error) {
 	response := controller.Data{}
+	refid := param["referenceId"]
 
-	disbursement, err := a.disbursementUC.GetDisbursement(ctx, param["referenceId"])
+	logger.Info(ctx, fmt.Sprintf("[Get Disbursement] Getting disbursement refid=%s", refid))
+
+	disbursement, err := a.disbursementUC.GetDisbursement(ctx, refid)
 	if err.Code != 0 { // 0 = success
 		return controller.Data{}, err
 	}
+
+	logger.Info(ctx, fmt.Sprintf(
+		"[Get Disbursement] Successfully retrieved disbursement refid=%s disbursement=%+v",
+		disbursement.ReferenceId,
+		disbursement,
+	))
 
 	response.Status = http.StatusOK
 	response.Data = disbursement
@@ -54,7 +63,7 @@ func (a *disbursementApi) CreateDisbursement(
 	request := model.CreateDisbursementRequest{}
 
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
-		logger.Error(ctx, fmt.Sprint("[Create Disbursement - API] unmarshal error: ", err))
+		logger.Error(ctx, fmt.Sprint("[Create Disbursement] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -62,7 +71,7 @@ func (a *disbursementApi) CreateDisbursement(
 	}
 
 	if validationErrors := helper.ValidateStruct(request, a.validate); len(validationErrors) > 0 {
-		logger.Error(ctx, fmt.Sprint("[Create Disbursement - API] validation error: ", validationErrors))
+		logger.Error(ctx, fmt.Sprint("[Create Disbursement] validation error: ", validationErrors))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.VALIDATION_ERROR,
@@ -76,6 +85,8 @@ func (a *disbursementApi) CreateDisbursement(
 	if err.Code != 0 {
 		return controller.Data{}, err
 	}
+
+	logger.Info(ctx, fmt.Sprintf("[Create Disbursement] Successfully created disbursement=%+v", disbursementResponse))
 
 	response.Status = http.StatusOK
 	response.Data = disbursementResponse
@@ -91,7 +102,7 @@ func (a *disbursementApi) CallbackDisbursement(
 	var decodedHeaders http.Header
 
 	if err := json.Unmarshal([]byte(param[constants.REQUEST_HEADERS]), &decodedHeaders); err != nil {
-		logger.Error(ctx, fmt.Sprint("[Callback Disbursement - API] unmarshal error: ", err))
+		logger.Error(ctx, fmt.Sprint("[Callback Disbursement] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -105,10 +116,8 @@ func (a *disbursementApi) CallbackDisbursement(
 		}
 	}
 
-	// TODO: handle idempotency with redis
-
 	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &body); err != nil {
-		logger.Error(ctx, fmt.Sprint("[Callback Disbursement - API] unmarshal error: ", err))
+		logger.Error(ctx, fmt.Sprint("[Callback Disbursement] unmarshal error: ", err))
 		return controller.Data{}, model.Error{
 			Code:    http.StatusBadRequest,
 			Message: constants.INVALID_JSON_BODY,
@@ -119,7 +128,13 @@ func (a *disbursementApi) CallbackDisbursement(
 		ReferenceId: body.ExternalId,
 		Status:      body.Status,
 		FailureCode: body.FailureCode,
+		WebhookId:   decodedHeaders.Get(constants.WEBHOOK_ID),
 	}
+	logger.Info(ctx, fmt.Sprintf(
+		"[Callback Disbursement] Processing disbursement callback refid=%s body=%+v",
+		request.ReferenceId,
+		body,
+	))
 
 	err := a.disbursementUC.CallbackDisbursement(ctx, request)
 	if err.Code != 0 {

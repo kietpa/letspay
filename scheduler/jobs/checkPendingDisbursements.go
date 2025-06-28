@@ -2,8 +2,9 @@ package jobs
 
 import (
 	"context"
+	"fmt"
+	"letspay/tool/logger"
 	"letspay/usecase"
-	"log"
 	"time"
 )
 
@@ -18,15 +19,15 @@ func NewCheckPendingDisbursementsJob(input usecase.DisbursementUsecase) *CheckPe
 }
 
 func (j *CheckPendingDisbursementsJob) Run() {
-	// get all refids of pending trx
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
+	logger.Info(ctx, fmt.Sprintf("[Disbursement Scheduler] starting disbursement scheduler..."))
 	updateCount, err := j.disbursementUsecase.CheckAndUpdatePendingDisbursements(ctx)
 	if err != nil {
-		log.Println("check pending get disb err: ", err)
+		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler] failed to run scheduler err=%s", err))
 		return
 	}
-	log.Println("disbursements updated: ", updateCount)
+	logger.Info(ctx, fmt.Sprintf("[Disbursement Scheduler] disbursements updated=%d", updateCount))
 
 }

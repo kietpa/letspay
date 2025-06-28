@@ -4,7 +4,7 @@ services:
     image: postgres
     environment:
       POSTGRES_DB: letspay # creates DB with this name at init
-      POSTGRES_USER: letsuser # superuser (needs to match application.properties)
+      POSTGRES_USER: letsuser # superuser
       POSTGRES_PASSWORD: letspassword
       PGDATA: /data/letspay
     volumes:
@@ -15,6 +15,17 @@ services:
       - db
       - monitoring
     restart: unless-stopped
+  redis:
+    container_name: letspay-redis
+    image: redis:alpine
+    command: redis-server --requirepass letsredis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - db
+    restart: unless-stopped
 
   app:
     user: root
@@ -22,6 +33,7 @@ services:
     container_name: letspay-app
     depends_on:
       - db
+      - redis  
     env_file: .env
     labels: { logging: "promtail" }
     ports:
@@ -29,7 +41,6 @@ services:
     networks:
       - db
     restart: unless-stopped
-
   # Monitoring stack
   loki:
     image: grafana/loki:3.3.2
@@ -65,6 +76,8 @@ networks:
 
 volumes:
   db:
+    driver: local
+  redis_data:
     driver: local
 
     

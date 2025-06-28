@@ -8,7 +8,8 @@ import (
 	"letspay/model"
 	"letspay/repository/provider"
 	"letspay/tool/helper"
-	"log"
+	"letspay/tool/logger"
+	"letspay/tool/redis"
 	"net/http"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 
 const (
 	X_IDEMPOTENCY_KEY = "X-IDEMPOTENCY-KEY"
+	X_CALLBACK_TOKEN  = "x-callback-token"
 )
 
 var XenditErr = map[string]string{
@@ -55,12 +57,14 @@ type (
 		baseUrl       string
 		apiKey        string
 		callbackToken string
+		redisRepo     *redis.RedisClient
 	}
 
 	NewProviderRepoInput struct {
 		BaseUrl       string
 		ApiKey        string
 		CallbackToken string
+		RedisRepo     *redis.RedisClient
 	}
 )
 
@@ -69,6 +73,7 @@ func NewProviderRepo(input NewProviderRepoInput) provider.ProviderRepo {
 		baseUrl:       input.BaseUrl,
 		apiKey:        input.ApiKey,
 		callbackToken: input.CallbackToken,
+		redisRepo:     input.RedisRepo,
 	}
 }
 
@@ -76,11 +81,13 @@ func NewProviderRepo(input NewProviderRepoInput) provider.ProviderRepo {
 func (p *providerRepo) ExecuteDisbursement(
 	ctx context.Context, input model.CreateDisbursementInput,
 ) (model.CreateDisbursementProviderOutput, error) {
+	idem := uuid.New().String()
+
 	cfg := helper.RequestConfig{
 		URL:    p.baseUrl + "/disbursements",
 		Method: http.MethodPost,
 		Headers: map[string]string{
-			X_IDEMPOTENCY_KEY: uuid.New().String(),
+			X_IDEMPOTENCY_KEY: idem,
 			"Content-Type":    "application/json",
 		},
 		Body: xenditExecDisburseInput{
@@ -99,20 +106,26 @@ func (p *providerRepo) ExecuteDisbursement(
 		ExpectedStatus: http.StatusOK,
 	}
 
+	logger.Info(ctx, fmt.Sprintf("[Create Disbursement - Provider] creating disbursement at provider refid=%s requestBody=%v",
+		input.ReferenceId,
+		cfg.Body,
+	))
+
 	resp := xenditDisbursementObject{}
 	respByte, statusCode, err := helper.SendRequest(cfg)
 	if err != nil {
-		fmt.Println(statusCode, "exec disb xendit resp:", err)
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Provider] error when sending request=%s statusCode=%d refid=%s",
+			err,
+			statusCode,
+			input.ReferenceId,
+		))
 		return model.CreateDisbursementProviderOutput{}, err
 	}
 
 	err = json.Unmarshal(respByte, &resp)
 	if err != nil {
-		fmt.Println("exec disb xendit unmarshal:", err)
 		return model.CreateDisbursementProviderOutput{}, err
 	}
-
-	log.Println(resp)
 
 	output := model.CreateDisbursementProviderOutput{
 		ReferenceId:         resp.ExternalId,
@@ -149,17 +162,23 @@ func (p *providerRepo) GetDisbursementStatus(
 		},
 		ExpectedStatus: http.StatusOK,
 	}
+	logger.Info(ctx, fmt.Sprintf("[Get Disbursement - Provider] checking status to provider providerRefid=%s",
+		providerRefid,
+	))
 
 	resp := xenditDisbursementObject{}
 	respByte, statusCode, err := helper.SendRequest(cfg)
 	if err != nil {
-		fmt.Println(statusCode, "get disb xendit resp:", err)
+		logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Provider] error when sending request=%s statusCode=%d providerRefid=%s",
+			err,
+			statusCode,
+			providerRefid,
+		))
 		return model.GetDisbursementProviderResponse{}, err
 	}
 
 	err = json.Unmarshal(respByte, &resp)
 	if err != nil {
-		fmt.Println(statusCode, "get disb xendit resp:", err)
 		return model.GetDisbursementProviderResponse{}, err
 	}
 
@@ -174,5 +193,12 @@ func (p *providerRepo) GetDisbursementStatus(
 func (p *providerRepo) ValidateCallbackToken(
 	ctx context.Context, headers http.Header,
 ) bool {
-	return p.callbackToken == headers.Get(constants.X_CALLBACK_TOKEN)
+	xCallbackToken := headers.Get(X_CALLBACK_TOKEN) // in env
+	webhookId := headers.Get(constants.WEBHOOK_ID)  // for idempotency
+	logger.Info(ctx, fmt.Sprintf("[Validate Token - Provider] validating x-callback-token=%s webhook-id=%s",
+		xCallbackToken,
+		webhookId,
+	))
+
+	return p.callbackToken == xCallbackToken && !p.redisRepo.Exists(ctx, webhookId)
 }

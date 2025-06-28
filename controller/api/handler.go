@@ -47,7 +47,7 @@ func (m *ApiModule) GetDisbursement(w http.ResponseWriter, r *http.Request) {
 		InputParams := make(map[string]string)
 		InputParams["referenceId"] = trxId
 
-		logger.Info(ctx, fmt.Sprintf("[Get Disbursement - Handler] request received from %s", helper.GetIP(r)))
+		logger.Info(ctx, fmt.Sprintf("[Get Disbursement] request received from %s", helper.GetIP(r)))
 
 		response, err = m.disbursementApi.GetDisbursement(ctx, InputParams)
 		if err.Code != 0 {
@@ -55,7 +55,7 @@ func (m *ApiModule) GetDisbursement(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Get Disbursement - Handler] method not allowed"))
+		logger.Error(ctx, fmt.Sprintf("[Get Disbursement] method not allowed"))
 		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
@@ -89,14 +89,14 @@ func (m *ApiModule) CreateDisbursement(w http.ResponseWriter, r *http.Request) {
 		param[constants.JSON_BODY] = string(body)
 		param[constants.USER_ID] = strconv.Itoa(r.Context().Value(constants.USER_ID).(int))
 
-		logger.Info(ctx, fmt.Sprintf("[Create Disbursement - Handler] request received from %s", helper.GetIP(r)))
+		logger.Info(ctx, fmt.Sprintf("[Create Disbursement] request received from %s", helper.GetIP(r)))
 		response, err = m.disbursementApi.CreateDisbursement(ctx, param)
 		if err.Code != 0 {
 			controller.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement - Handler] method not allowed"))
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] method not allowed"))
 		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
@@ -126,7 +126,7 @@ func (m *ApiModule) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
 
-		logger.Info(ctx, fmt.Sprintf("[Register User - Handler] request received from %s", helper.GetIP(r)))
+		logger.Info(ctx, fmt.Sprintf("[Register User] request received from %s", helper.GetIP(r)))
 
 		response, err = m.userApi.RegisterUser(ctx, param)
 		if err.Code != 0 {
@@ -134,7 +134,7 @@ func (m *ApiModule) RegisterUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Register User - Handler] method not allowed"))
+		logger.Error(ctx, fmt.Sprintf("[Register User] method not allowed"))
 		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
@@ -165,7 +165,7 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
 
-		logger.Info(ctx, fmt.Sprintf("[Register User - Handler] request received from %s", helper.GetIP(r)))
+		logger.Info(ctx, fmt.Sprintf("[Register User] request received from %s", helper.GetIP(r)))
 
 		response, err = m.userApi.LoginUser(ctx, param)
 		if err.Code != 0 {
@@ -173,7 +173,7 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Login User - Handler] method not allowed"))
+		logger.Error(ctx, fmt.Sprintf("[Login User] method not allowed"))
 		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
@@ -198,7 +198,7 @@ func (m *ApiModule) CallbackDisbursement(w http.ResponseWriter, r *http.Request)
 		encodedHeaders, _ := json.Marshal(r.Header)
 		param[constants.REQUEST_HEADERS] = string(encodedHeaders)
 
-		logger.Info(ctx, fmt.Sprintf("[Callback Disbursement - Handler] request received from %s", helper.GetIP(r)))
+		logger.Info(ctx, fmt.Sprintf("[Callback Disbursement] request received from %s", helper.GetIP(r)))
 
 		response, err = m.disbursementApi.CallbackDisbursement(ctx, param)
 		if err.Code != 0 {
@@ -206,7 +206,7 @@ func (m *ApiModule) CallbackDisbursement(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Callback Disbursement - Handler] method not allowed"))
+		logger.Error(ctx, fmt.Sprintf("[Callback Disbursement] method not allowed"))
 		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}

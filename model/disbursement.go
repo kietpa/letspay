@@ -60,6 +60,7 @@ type (
 		ReferenceId string `json:"reference_id"`
 		Status      string `json:"status"`
 		FailureCode string `json:"failure_code,omitempty"`
+		WebhookId   string `json:"webhook-id"`
 	}
 
 	XenditDisbursementCallback struct {
