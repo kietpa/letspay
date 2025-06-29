@@ -17,8 +17,7 @@ import (
 )
 
 const (
-	X_IDEMPOTENCY_KEY = "X-IDEMPOTENCY-KEY"
-	X_CALLBACK_TOKEN  = "x-callback-token"
+	X_CALLBACK_TOKEN = "x-callback-token"
 )
 
 var XenditErr = map[string]string{
@@ -77,7 +76,7 @@ func NewProviderRepo(input NewProviderRepoInput) provider.ProviderRepo {
 	}
 }
 
-// TODO: add bank code converter
+// TODO: add bank code mapper
 func (p *providerRepo) ExecuteDisbursement(
 	ctx context.Context, input model.CreateDisbursementInput,
 ) (model.CreateDisbursementProviderOutput, error) {
@@ -87,8 +86,8 @@ func (p *providerRepo) ExecuteDisbursement(
 		URL:    p.baseUrl + "/disbursements",
 		Method: http.MethodPost,
 		Headers: map[string]string{
-			X_IDEMPOTENCY_KEY: idem,
-			"Content-Type":    "application/json",
+			constants.X_IDEMPOTENCY_KEY: idem,
+			"Content-Type":              "application/json",
 		},
 		Body: xenditExecDisburseInput{
 			ExternalId:        input.ReferenceId,
@@ -106,7 +105,7 @@ func (p *providerRepo) ExecuteDisbursement(
 		ExpectedStatus: http.StatusOK,
 	}
 
-	logger.Info(ctx, fmt.Sprintf("[Create Disbursement - Provider] creating disbursement at provider refid=%s requestBody=%v",
+	logger.Info(ctx, fmt.Sprintf("[Create Disbursement - Provider] creating disbursement at xendit refid=%s requestBody=%v",
 		input.ReferenceId,
 		cfg.Body,
 	))
@@ -153,7 +152,7 @@ func (p *providerRepo) GetDisbursementStatus(
 		URL:    p.baseUrl + "/disbursements/" + providerRefid,
 		Method: http.MethodGet,
 		Headers: map[string]string{
-			X_IDEMPOTENCY_KEY: uuid.New().String(),
+			constants.X_IDEMPOTENCY_KEY: uuid.New().String(),
 		},
 		Timeout: time.Duration(30) * time.Second,
 		BasicAuth: &helper.BasicAuthConfig{
@@ -162,7 +161,7 @@ func (p *providerRepo) GetDisbursementStatus(
 		},
 		ExpectedStatus: http.StatusOK,
 	}
-	logger.Info(ctx, fmt.Sprintf("[Get Disbursement - Provider] checking status to provider providerRefid=%s",
+	logger.Info(ctx, fmt.Sprintf("[Get Disbursement - Provider] checking status at xendit providerRefid=%s",
 		providerRefid,
 	))
 
@@ -183,7 +182,6 @@ func (p *providerRepo) GetDisbursementStatus(
 	}
 
 	return model.GetDisbursementProviderResponse{
-		ReferenceId:         resp.ExternalId,
 		ProviderReferenceId: resp.Id,
 		Status:              resp.Status,
 		FailureReason:       resp.FailureCode,

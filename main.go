@@ -7,6 +7,7 @@ import (
 	"letspay/controller/api"
 	"letspay/repository/database"
 	"letspay/repository/provider"
+	"letspay/repository/provider/midtrans"
 	"letspay/repository/provider/xendit"
 	"letspay/scheduler"
 	"letspay/tool/redis"
@@ -54,8 +55,16 @@ func main() {
 			RedisRepo:     rds,
 		},
 	)
+	midtransRepo := midtrans.NewProviderRepo(
+		midtrans.NewProviderRepoInput{
+			BaseUrl:   cfg.Provider[constants.MIDTRANS_PROVIDER_ID].BaseUrl,
+			ServerKey: cfg.Provider[constants.MIDTRANS_PROVIDER_ID].ApiKey,
+			RedisRepo: rds,
+		},
+	)
 	providerRepo := map[int]provider.ProviderRepo{
-		constants.XENDIT_PROVIDER_ID: xenditRepo,
+		constants.XENDIT_PROVIDER_ID:   xenditRepo,
+		constants.MIDTRANS_PROVIDER_ID: midtransRepo,
 	}
 
 	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, rds)
@@ -67,7 +76,6 @@ func main() {
 	// TODO: mssg queue
 
 	router := api.HandleRequests(cfg, disbursementUC, userUC)
-
 	router.HandleFunc("/swagger/*", httpSwagger.WrapHandler)
 
 	server := &http.Server{
@@ -100,7 +108,7 @@ func main() {
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-done
+	<-done // when ctrl+c is called signal will be sent here
 	log.Println("Shutting down gracefully...")
 
 	cancel()

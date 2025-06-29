@@ -3,6 +3,7 @@ package constants
 const (
 	INVALID int = iota
 	XENDIT_PROVIDER_ID
+	MIDTRANS_PROVIDER_ID
 )
 
 const (
@@ -16,5 +17,6 @@ const (
 	STATUS_COMPLETED = "COMPLETED"
 	STATUS_FAILED    = "FAILED"
 
-	WEBHOOK_ID = "webhook-id"
+	X_IDEMPOTENCY_KEY = "X-IDEMPOTENCY-KEY"
+	WEBHOOK_ID        = "webhook-id"
 )

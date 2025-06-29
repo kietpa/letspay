@@ -145,7 +145,7 @@ func (u disbursementUsecase) CreateDisbursement(
 	// TODO: add provider sequence
 
 	// execute disbursement to providers
-	resp, err := u.providerRepo[constants.XENDIT_PROVIDER_ID].ExecuteDisbursement(ctx, input)
+	resp, err := u.providerRepo[constants.MIDTRANS_PROVIDER_ID].ExecuteDisbursement(ctx, input)
 	if err != nil {
 		// TODO: if transaction exceed timeout without final error status,
 		// respond to user with pending/stuck/hanging status

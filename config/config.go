@@ -29,13 +29,19 @@ func InitConfig() model.AppConfig {
 		CallbackToken: os.Getenv("XENDIT_CALLBACK_TOKEN"),
 	}
 
+	midtransProvider := model.Provider{
+		ApiKey:  os.Getenv("MIDTRANS_SERVER_KEY"),
+		BaseUrl: os.Getenv("MIDTRANS_URL"),
+	}
+
 	return model.AppConfig{
 		Server: model.Server{
 			Port:    "8080",
 			Timeout: 30,
 		},
 		Provider: map[int]model.Provider{
-			constants.XENDIT_PROVIDER_ID: xenditProvider,
+			constants.XENDIT_PROVIDER_ID:   xenditProvider,
+			constants.MIDTRANS_PROVIDER_ID: midtransProvider,
 		},
 		Redis: model.Redis{
 			Host:     os.Getenv("REDIS_HOST"),
