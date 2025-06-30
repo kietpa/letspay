@@ -17,6 +17,10 @@ type (
 		db *pgxpool.Pool
 	}
 
+	bankRepo struct {
+		db *pgxpool.Pool
+	}
+
 	DisbursementRepo interface {
 		GetDisbursement(
 			ctx context.Context, transactionId string,
@@ -41,5 +45,15 @@ type (
 			ctx context.Context,
 			email string,
 		) (dto.User, error)
+	}
+
+	BankRepo interface {
+		GetBankByCode(
+			ctx context.Context,
+			bankCode string,
+		) (dto.Bank, error)
+		GetAllBanks(
+			ctx context.Context,
+		) ([]model.BankDetail, error)
 	}
 )

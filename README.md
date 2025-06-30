@@ -32,9 +32,11 @@ note: midtrans API key for disbursements (IRIS) needs business registration
 - [x] add basic openapi documentation
 - [x] improved logging with grafana/elk
 - [x] use redis to handle idempotency on xendit's callback retries
-- [ ] add other provider (midtrans) and implement provider switching
+- [x] add other provider (midtrans) and implement provider switching
+- [ ] implement mq (split scheduler)
 - [ ] handle race conditions using go routines & channels
-- [ ] implement microservices ()
-- [ ] improve readme (table of contents, etc)
+- [ ] add rate limiter & test it
+- [ ] improve caching
 - [ ] improved error handling (handle provider response, database errors, catch panics)
 - [ ] handle context timeouts
+- [ ] add user balance management

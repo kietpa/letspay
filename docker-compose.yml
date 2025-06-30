@@ -27,7 +27,7 @@ services:
       - db
     restart: unless-stopped
 
-  app:
+  app: # to debug, we have to rebuild app image from scratch with docker rmi letspay-app
     user: root
     build: .
     container_name: letspay-app

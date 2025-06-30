@@ -47,6 +47,7 @@ func main() {
 
 	disbursementRepo := database.NewDisbursementRepo(db)
 	userRepo := database.NewUserRepo(db)
+	bankRepo := database.NewBankRepo(db)
 	xenditRepo := xendit.NewProviderRepo(
 		xendit.NewProviderRepoInput{
 			BaseUrl:       cfg.Provider[constants.XENDIT_PROVIDER_ID].BaseUrl,
@@ -67,7 +68,7 @@ func main() {
 		constants.MIDTRANS_PROVIDER_ID: midtransRepo,
 	}
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, rds)
+	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, bankRepo, rds)
 	userUC := usecase.NewUserUsecase(userRepo)
 
 	scheduler := scheduler.NewScheduler(disbursementUC)
@@ -103,7 +104,7 @@ func main() {
 		defer wg.Done()
 		scheduler.Start()
 		log.Println("Cron scheduler started")
-		<-ctx.Done() // Wait for shutdown signal
+		<-ctx.Done() // wait for shutdown signal
 	}()
 
 	done := make(chan os.Signal, 1)

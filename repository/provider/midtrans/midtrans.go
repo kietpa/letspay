@@ -28,6 +28,10 @@ type (
 	}
 
 	midtransExecDisburseResponse struct {
+		Payout []payout `json:"payout"`
+	}
+
+	payout struct {
 		Status      string `json:"status"` // queued, processed, completed, failed
 		ReferenceNo string `json:"reference_no"`
 	}
@@ -120,18 +124,19 @@ func (p *providerRepo) ExecuteDisbursement(
 
 	output := model.CreateDisbursementProviderOutput{
 		ReferenceId:         input.ReferenceId,
-		ProviderReferenceId: resp.ReferenceNo,
-		Status:              resp.Status,
+		ProviderReferenceId: resp.Payout[0].ReferenceNo,
+		Status:              resp.Payout[0].Status,
 		Amount:              input.Amount,
 		BankCode:            input.BankCode,
 		BankAccountName:     input.BankAccountName,
 		Description:         input.Description,
 	}
 
-	if resp.Status == "queued" {
+	// midtrans uses lowercase
+	if output.Status == "queued" {
 		output.Status = "PENDING"
 	} else {
-		output.Status = strings.ToUpper(resp.Status)
+		output.Status = strings.ToUpper(output.Status)
 	}
 
 	return output, nil
@@ -173,6 +178,7 @@ func (p *providerRepo) GetDisbursementStatus(
 		return model.GetDisbursementProviderResponse{}, err
 	}
 
+	// midtrans uses lowercase
 	if resp.Status == "queued" {
 		resp.Status = "PENDING"
 	} else {

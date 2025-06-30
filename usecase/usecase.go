@@ -13,6 +13,7 @@ type (
 	disbursementUsecase struct {
 		disbursementRepo database.DisbursementRepo
 		providerRepo     map[int]provider.ProviderRepo
+		bankRepo         database.BankRepo
 		redisRepo        *redis.RedisClient
 	}
 

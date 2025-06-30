@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"letspay/common/constants"
 	"letspay/model"
@@ -11,17 +12,23 @@ import (
 	"letspay/tool/redis"
 	"letspay/tool/util"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func NewDisbursementUsecase(
 	disbursementRepo database.DisbursementRepo,
 	providerRepo map[int]provider.ProviderRepo,
+	bankRepo database.BankRepo,
 	redisRepo *redis.RedisClient,
 ) DisbursementUsecase {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
 		providerRepo:     providerRepo,
+		bankRepo:         bankRepo,
 		redisRepo:        redisRepo,
 	}
 }
@@ -142,24 +149,112 @@ func (u disbursementUsecase) CreateDisbursement(
 		}
 	}
 
-	// TODO: add provider sequence
-
-	// execute disbursement to providers
-	resp, err := u.providerRepo[constants.MIDTRANS_PROVIDER_ID].ExecuteDisbursement(ctx, input)
+	// get provider sequence
+	bank, err := u.bankRepo.GetBankByCode(ctx, input.BankCode)
 	if err != nil {
-		// TODO: if transaction exceed timeout without final error status,
-		// respond to user with pending/stuck/hanging status
-		// if errors.Is(err, context.DeadlineExceeded) {
-		// }
-
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] provider execute disbursement error=%s refid=%s",
+		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] get bank provider sequence DB error=%s refid=%s",
 			err,
 			input.ReferenceId,
 		))
-		if resp.Status == "FAILED" {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.DisbursementDetail{}, model.Error{
+				Code:    http.StatusBadRequest,
+				Message: constants.INVALID_BANK_CODE_MESSAGE,
+			}
+		} else {
+			return model.DisbursementDetail{}, model.Error{
+				Code:    http.StatusInternalServerError,
+				Message: constants.INTERNAL_ERROR_MESSAGE,
+			}
+		}
+	}
+
+	provSeq := strings.Split(bank.Providers, ",")
+
+	res := model.DisbursementDetail{
+		ReferenceId:       input.ReferenceId,
+		UserReferenceId:   input.UserReferenceId,
+		Status:            "",
+		Amount:            input.Amount,
+		BankCode:          input.BankCode,
+		CreatedAt:         input.CreatedAt,
+		BankAccountNumber: input.BankAccountNumber,
+		BankAccountName:   input.BankAccountName,
+		Description:       input.Description,
+		FailureCode:       "",
+	}
+
+	for i, provider := range provSeq {
+		providerId, _ := strconv.Atoi(strings.TrimSpace(provider))
+
+		resp, err := u.providerRepo[providerId].ExecuteDisbursement(ctx, input)
+		if err != nil || resp.Status == "FAILED" {
+			// TODO: if transaction exceed timeout without final error status,
+			// respond to user with pending/stuck/hanging status
+			// if errors.Is(err, context.DeadlineExceeded) {
+			// }
+			logger.Error(ctx, fmt.Sprintf("[Create Disbursement] provider execute disbursement error=%s refid=%s",
+				err,
+				input.ReferenceId,
+			))
+			if i == len(provSeq)-1 {
+				// check if error is internal or not
+				if resp.Status != "" {
+					if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+						ReferenceId:         input.ReferenceId,
+						ProviderId:          providerId,
+						ProviderReferenceId: resp.ProviderReferenceId,
+						Status:              resp.Status,
+						UpdatedAt:           time.Now(),
+						FailureCode:         resp.FailureCode,
+					}); err != nil {
+						logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
+							err,
+							input.ReferenceId,
+						))
+					}
+
+					if resp.StatusCode == http.StatusBadRequest {
+						return model.DisbursementDetail{}, model.Error{
+							Code:    http.StatusBadRequest,
+							Message: resp.FailureCode,
+						}
+					}
+					return model.DisbursementDetail{}, model.Error{
+						Code:    http.StatusInternalServerError,
+						Message: constants.INTERNAL_ERROR_MESSAGE,
+					}
+				} else {
+					if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
+						ReferenceId:         input.ReferenceId,
+						ProviderId:          0,
+						ProviderReferenceId: "",
+						Status:              "FAILED",
+						UpdatedAt:           time.Now(),
+						FailureCode:         "INTERNAL ERROR",
+					}); err != nil {
+						logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
+							err,
+							input.ReferenceId,
+						))
+					}
+
+					return model.DisbursementDetail{}, model.Error{
+						Code:    http.StatusInternalServerError,
+						Message: constants.INTERNAL_ERROR_MESSAGE,
+					}
+				}
+			} else {
+				// maybe record the last provider?
+				continue
+			}
+		}
+
+		if resp.Status == "COMPLETED" || resp.Status == "PENDING" {
+			// update w/final result
 			if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
 				ReferenceId:         input.ReferenceId,
-				ProviderId:          constants.XENDIT_PROVIDER_ID,
+				ProviderId:          providerId,
 				ProviderReferenceId: resp.ProviderReferenceId,
 				Status:              resp.Status,
 				UpdatedAt:           time.Now(),
@@ -170,64 +265,13 @@ func (u disbursementUsecase) CreateDisbursement(
 					input.ReferenceId,
 				))
 			}
-
-			if resp.StatusCode == http.StatusBadRequest {
-				return model.DisbursementDetail{}, model.Error{
-					Code:    http.StatusBadRequest,
-					Message: resp.FailureCode,
-				}
-			}
-			return model.DisbursementDetail{}, model.Error{
-				Code:    http.StatusInternalServerError,
-				Message: constants.INTERNAL_ERROR_MESSAGE,
-			}
-		} else {
-			if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
-				ReferenceId:         input.ReferenceId,
-				ProviderId:          0,
-				ProviderReferenceId: "",
-				Status:              "FAILED",
-				UpdatedAt:           time.Now(),
-				FailureCode:         "INTERNAL ERROR",
-			}); err != nil {
-				logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
-					err,
-					input.ReferenceId,
-				))
-			}
-
-			return model.DisbursementDetail{}, model.Error{
-				Code:    http.StatusInternalServerError,
-				Message: constants.INTERNAL_ERROR_MESSAGE,
-			}
+			res.Status = resp.Status
+			res.FailureCode = resp.FailureCode
+			break
 		}
 	}
-	if err = u.disbursementRepo.UpdateDisbursement(ctx, model.UpdateDisbursementInput{
-		ReferenceId:         input.ReferenceId,
-		ProviderId:          constants.XENDIT_PROVIDER_ID,
-		ProviderReferenceId: resp.ProviderReferenceId,
-		Status:              resp.Status,
-		UpdatedAt:           time.Now(),
-		FailureCode:         resp.FailureCode,
-	}); err != nil {
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] update disbursement DB error=%s refid=%s",
-			err,
-			input.ReferenceId,
-		))
-	}
 
-	return model.DisbursementDetail{
-		ReferenceId:       input.ReferenceId,
-		UserReferenceId:   input.UserReferenceId,
-		Status:            resp.Status,
-		Amount:            input.Amount,
-		BankCode:          input.BankCode,
-		CreatedAt:         input.CreatedAt,
-		BankAccountNumber: input.BankAccountNumber,
-		BankAccountName:   input.BankAccountName,
-		Description:       input.Description,
-		FailureCode:       resp.FailureCode,
-	}, model.Error{}
+	return res, model.Error{}
 }
 
 func (u disbursementUsecase) CallbackDisbursement(
@@ -296,6 +340,8 @@ func (u disbursementUsecase) CallbackValidateToken(
 		return u.providerRepo[constants.XENDIT_PROVIDER_ID].ValidateCallbackToken(
 			ctx, headers,
 		)
+	case "midtrans":
+		return true // no validation needed
 	}
 	return false
 }
