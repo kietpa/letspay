@@ -12,6 +12,7 @@ const (
 	PROVIDER        = "provider"
 	USER_ID         = "user_id"
 	PROCESS_ID      = "ProcessID"
+	X_USER_ID       = "X-User-ID"
 
 	STATUS_PENDING   = "PENDING"
 	STATUS_COMPLETED = "COMPLETED"

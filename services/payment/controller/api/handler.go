@@ -12,7 +12,6 @@ import (
 	"letspay/services/payment/controller"
 	"letspay/services/payment/model"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -87,7 +86,7 @@ func (m *ApiModule) CreateDisbursement(w http.ResponseWriter, r *http.Request) {
 		param := make(map[string]string)
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
-		param[constants.USER_ID] = strconv.Itoa(r.Context().Value(constants.USER_ID).(int))
+		param[constants.USER_ID] = r.Header.Get(constants.X_USER_ID)
 
 		logger.Info(ctx, fmt.Sprintf("[Create Disbursement] request received from %s", helper.GetIP(r)))
 		response, err = m.disbursementApi.CreateDisbursement(ctx, param)

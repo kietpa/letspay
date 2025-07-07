@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"letspay/pkg/auth"
 	"letspay/services/api-gateway/routing"
 	"log"
 	"net/http"
@@ -22,6 +23,8 @@ func main() {
 		log.Fatalf("Failed to load env variables, err=%v", err)
 		panic(err)
 	}
+
+	auth.SetSecret(os.Getenv("JWT_SECRET"))
 
 	// TODO: mssg queue
 

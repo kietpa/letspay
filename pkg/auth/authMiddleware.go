@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"context"
 	"net/http"
+	"strconv"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -21,8 +21,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
+		r.Header.Set("X-User-ID", strconv.Itoa(claims.UserID))
 
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r)
 	})
 }

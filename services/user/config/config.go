@@ -1,6 +1,7 @@
 package config
 
 import (
+	"letspay/pkg/auth"
 	"letspay/services/user/model"
 	"log"
 	"os"
@@ -21,6 +22,8 @@ func InitConfig() model.AppConfig {
 		log.Fatalf("Failed to load env variables, err=%v", err)
 		panic(err)
 	}
+
+	auth.SetSecret(os.Getenv("JWT_SECRET"))
 
 	return model.AppConfig{
 		Server: model.Server{

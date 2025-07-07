@@ -34,17 +34,13 @@ func GenerateToken(userId int) (string, error) {
 }
 
 func ValidateToken(tokenStr string) (Claims, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (any, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (any, error) {
 		return JWTKey, nil
 	})
 	if err != nil || !token.Valid {
 		return Claims{}, errors.New("invalid token")
 	}
 
-	claims, ok := token.Claims.(Claims)
-	if !ok {
-		return Claims{}, errors.New("invalid claims")
-	}
-
-	return claims, nil
+	return *claims, nil
 }
