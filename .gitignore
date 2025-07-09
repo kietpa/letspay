@@ -1,4 +1,9 @@
 .env
 
 .vscode/
+
 var/
+data/
+
+go.sum
+go.work.sum
