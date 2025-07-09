@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"letspay/pkg/db"
+	"letspay/pkg/rabbitmq"
 	"letspay/services/payment/common/constants"
 	"letspay/services/payment/config"
 	"letspay/services/payment/controller/api"
+	"letspay/services/payment/mq"
 	"letspay/services/payment/repository/database"
 	"letspay/services/payment/repository/provider"
 	"letspay/services/payment/repository/provider/midtrans"
@@ -27,6 +29,8 @@ func main() {
 	rds := db.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password)
 	db := db.InitDB()
 	defer db.Close()
+
+	mqConn := rabbitmq.Connect(cfg.RabbitMqUrl)
 
 	disbursementRepo := database.NewDisbursementRepo(db)
 	bankRepo := database.NewBankRepo(db)
@@ -50,12 +54,18 @@ func main() {
 		constants.MIDTRANS_PROVIDER_ID: midtransRepo,
 	}
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, bankRepo, rds)
+	disbursementUC := usecase.NewDisbursementUsecase(
+		disbursementRepo,
+		providerRepo,
+		bankRepo,
+		rds,
+		mqConn,
+	)
+	// TODO: make init func?
+	mq.ConsumeDisbursementRequest(mqConn, disbursementUC.HandleDisbursementRequest)
 
 	scheduler := scheduler.NewScheduler(disbursementUC)
 	scheduler.RegisterJobs()
-
-	// TODO: mssg queue
 
 	router := api.HandleRequests(cfg, disbursementUC)
 

@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"letspay/pkg/auth"
+	"letspay/pkg/rabbitmq"
+	"letspay/services/api-gateway/handler"
 	"letspay/services/api-gateway/routing"
 	"log"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
@@ -26,13 +29,16 @@ func main() {
 
 	auth.SetSecret(os.Getenv("JWT_SECRET"))
 
-	// TODO: mssg queue
+	mq := rabbitmq.Connect(os.Getenv("RABBITMQ_URL"))
+	val := validator.New()
+	handler := handler.NewApiHandler(mq, val)
 
 	router := mux.NewRouter().StrictSlash(true)
 	routing.InitRouting(
 		router,
 		os.Getenv("USER_URL"),
 		os.Getenv("PAYMENT_URL"),
+		handler,
 	)
 
 	server := &http.Server{

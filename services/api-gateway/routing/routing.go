@@ -12,6 +12,7 @@ func InitRouting(
 	router *mux.Router,
 	userUrl string,
 	paymentUrl string,
+	apiHandler *handler.ApiHandler,
 ) {
 
 	user := router.PathPrefix("/user").Subrouter()
@@ -21,7 +22,7 @@ func InitRouting(
 	disbursement := router.PathPrefix(constants.DISBURSEMENT).Subrouter()
 	disbursement.Use(auth.AuthMiddleware)
 	disbursement.HandleFunc("/{referenceId}", handler.NewReverseProxy(paymentUrl))
-	disbursement.HandleFunc("", handler.NewReverseProxy(paymentUrl))
+	disbursement.HandleFunc("", apiHandler.CreateDisbursement).Methods("POST")
 
 	callback := router.PathPrefix(constants.CALLBACK).Subrouter()
 	callback.HandleFunc(constants.DISBURSEMENT+"/{provider}", handler.NewReverseProxy(paymentUrl))

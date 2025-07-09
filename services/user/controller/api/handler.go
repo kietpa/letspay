@@ -44,16 +44,16 @@ func (m *ApiModule) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 		response, err = m.userApi.RegisterUser(ctx, param)
 		if err.Code != 0 {
-			controller.RespondWithError(w, err.Code, err)
+			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Register User] method not allowed"))
-		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		logger.Error(ctx, "[Register User] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	controller.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response)
 }
 
 // @Summary		Login
@@ -83,14 +83,14 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 		response, err = m.userApi.LoginUser(ctx, param)
 		if err.Code != 0 {
-			controller.RespondWithError(w, err.Code, err)
+			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Login User] method not allowed"))
-		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		logger.Error(ctx, "[Register User] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	controller.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response)
 }

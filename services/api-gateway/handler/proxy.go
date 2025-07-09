@@ -16,6 +16,13 @@ func NewReverseProxy(target string) http.HandlerFunc {
 
 	proxy := httputil.NewSingleHostReverseProxy(parsedURL)
 
+	proxy.ModifyResponse = func(resp *http.Response) error {
+		if resp.Header.Get("Content-Type") == "" {
+			resp.Header.Set("Content-Type", "application/json")
+		}
+		return nil
+	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Scheme = parsedURL.Scheme
 		r.URL.Host = parsedURL.Host

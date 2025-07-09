@@ -22,7 +22,7 @@ Simple payment aggregator app that's still being worked on. The app uses microse
 
 ### To test webhooks:
 1. run app and expose http://localhost:8080 with ngrok, cloudflare tunneling, etc
-2. fill the webhook url in the provider dashboards (eg: https://asdf.com/callback/xendit)
+2. fill the webhook url in the provider dashboards (eg: https://exposedurl.com/callback/xendit)
 
 note: midtrans API key for disbursements (IRIS) needs business registration
 
