@@ -50,25 +50,3 @@ func PublishDisbursementFailed(conn *amqp.Connection, payload model.Disbursement
 			Body:        body,
 		})
 }
-
-func PublishDisbursementGet(conn *amqp.Connection, payload model.DisbursementGetEvent) error {
-	ch, err := conn.Channel()
-	if err != nil {
-		return fmt.Errorf("channel error: %w", err)
-	}
-	defer ch.Close()
-
-	err = ch.ExchangeDeclare("disbursement.events", "topic", true, false, false, false, nil)
-	if err != nil {
-		return fmt.Errorf("exchange declare error: %w", err)
-	}
-
-	body, _ := json.Marshal(payload)
-
-	return ch.PublishWithContext(context.TODO(),
-		"disbursement.events", "disbursement.get", false, false,
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        body,
-		})
-}

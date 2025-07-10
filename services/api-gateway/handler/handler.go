@@ -32,7 +32,7 @@ func NewApiHandler(
 	}
 }
 
-func (a *ApiHandler) CreateDisbursement(w http.ResponseWriter, r *http.Request) {
+func (a *ApiHandler) RequestDisbursement(w http.ResponseWriter, r *http.Request) {
 	request := model.CreateDisbursementRequest{}
 	body, _ := io.ReadAll(r.Body)
 	if err := json.Unmarshal(body, &request); err != nil {

@@ -22,7 +22,7 @@ func InitRouting(
 	disbursement := router.PathPrefix(constants.DISBURSEMENT).Subrouter()
 	disbursement.Use(auth.AuthMiddleware)
 	disbursement.HandleFunc("/{referenceId}", handler.NewReverseProxy(paymentUrl))
-	disbursement.HandleFunc("", apiHandler.CreateDisbursement).Methods("POST")
+	disbursement.HandleFunc("", apiHandler.RequestDisbursement).Methods("POST")
 
 	callback := router.PathPrefix(constants.CALLBACK).Subrouter()
 	callback.HandleFunc(constants.DISBURSEMENT+"/{provider}", handler.NewReverseProxy(paymentUrl))
