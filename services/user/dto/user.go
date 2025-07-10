@@ -8,4 +8,5 @@ type User struct {
 	Email          string    `db:"email"`
 	HashedPassword string    `db:"password"`
 	CreatedAt      time.Time `db:"created_at"`
+	Webhook        string    `db:"webhook"`
 }

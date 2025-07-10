@@ -20,5 +20,12 @@ type (
 		LoginUser(
 			ctx context.Context, loginUserRequest model.LoginUserRequest,
 		) (model.LoginUserResponse, model.Error)
+		GetUser(
+			ctx context.Context, userId int,
+		) (model.GetUserDetail, model.Error)
+		AddWebhook(
+			ctx context.Context,
+			input model.AddWebhookRequest,
+		) model.Error
 	}
 )

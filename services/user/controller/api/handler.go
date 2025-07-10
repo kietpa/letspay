@@ -11,6 +11,8 @@ import (
 	"letspay/services/user/controller"
 	"letspay/services/user/model"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 var notAllowedError = model.Error{
@@ -79,8 +81,6 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
 
-		logger.Info(ctx, fmt.Sprintf("[Register User] request received from %s", helper.GetIP(r)))
-
 		response, err = m.userApi.LoginUser(ctx, param)
 		if err.Code != 0 {
 			helper.RespondWithError(w, err.Code, err)
@@ -88,6 +88,58 @@ func (m *ApiModule) LoginUser(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		logger.Error(ctx, "[Register User] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, response)
+}
+
+func (m *ApiModule) GetUser(w http.ResponseWriter, r *http.Request) {
+	response := controller.Data{}
+	err := model.Error{}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
+
+	switch r.Method {
+	case http.MethodGet:
+		param := make(map[string]string)
+		vars := mux.Vars(r)
+		param[constants.USER_ID] = vars["userId"]
+
+		response, err = m.userApi.GetUser(ctx, param)
+		if err.Code != 0 {
+			helper.RespondWithError(w, err.Code, err)
+			return
+		}
+	default:
+		logger.Error(ctx, "[Get User] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		return
+	}
+
+	helper.RespondWithJSON(w, http.StatusOK, response)
+}
+
+func (m *ApiModule) AddWebhook(w http.ResponseWriter, r *http.Request) {
+	response := controller.Data{}
+	err := model.Error{}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
+
+	switch r.Method {
+	case http.MethodPost:
+		param := make(map[string]string)
+		body, _ := io.ReadAll(r.Body)
+		param[constants.JSON_BODY] = string(body)
+
+		response, err = m.userApi.AddWebhook(ctx, param)
+		if err.Code != 0 {
+			helper.RespondWithError(w, err.Code, err)
+			return
+		}
+	default:
+		logger.Error(ctx, "[Get User] method not allowed")
 		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}

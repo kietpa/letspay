@@ -22,5 +22,13 @@ type (
 			ctx context.Context,
 			email string,
 		) (dto.User, error)
+		GetUserById(
+			ctx context.Context,
+			userId int,
+		) (dto.User, error)
+		UpdateUserWebhook(
+			ctx context.Context,
+			input model.AddWebhookRequest,
+		) error
 	}
 )

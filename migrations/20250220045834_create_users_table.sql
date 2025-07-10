@@ -4,7 +4,8 @@ CREATE TABLE users (
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     password varchar(255),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    webhook varchar(255)
 );
 
 -- +goose Down
