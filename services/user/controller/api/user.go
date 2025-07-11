@@ -146,18 +146,23 @@ func (a *userApi) AddWebhook(
 		}
 	}
 
+	userId, _ := strconv.Atoi(param[constants.USER_ID])
+
 	logger.Info(ctx, fmt.Sprintf("[Add Webhook] adding user webhook=%s", request.Webhook))
 
-	err := a.userUC.AddWebhook(ctx, request)
+	err := a.userUC.AddWebhook(ctx, request.Webhook, userId)
 	if err.Code != 0 {
 		return controller.Data{}, err
 	}
 
-	logger.Info(ctx, fmt.Sprintf("[Add Webhook] Successfully added webhook=%+v userid=%d", request.Webhook, request.UserId))
+	logger.Info(ctx, fmt.Sprintf("[Add Webhook] Successfully added webhook=%+v userid=%d",
+		request.Webhook,
+		userId,
+	))
 
 	response.Status = http.StatusOK
 	response.Data = map[string]string{
-		"Message": "webhook registered",
+		"message": "Successfully registered webhook",
 	}
 
 	return response, model.Error{}

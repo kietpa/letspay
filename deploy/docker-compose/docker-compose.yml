@@ -37,6 +37,7 @@ services:
     depends_on:
       - user-service
       - payment-service
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -55,6 +56,7 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -73,6 +75,7 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -115,6 +118,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - db
 
 networks:
   db:

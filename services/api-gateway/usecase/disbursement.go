@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"letspay/pkg/helper"
 	"letspay/pkg/logger"
+	"letspay/pkg/util"
+	"letspay/services/api-gateway/common/constants"
 	"letspay/services/api-gateway/model"
 	"letspay/services/api-gateway/repository"
 	"net/http"
@@ -23,9 +25,12 @@ func NewDisbursementUsecase(userRepo repository.UserRepo) DisbursementUsecase {
 
 // TODO: maybe make a generic func to send disbursement results?
 func (u *disbursementUsecase) HandleDisbursementCompleted(input model.DisbursementCompletedEvent) {
-	webhookUrl, err := u.userRepo.GetUserWebhook(input.UserId)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
+
+	webhookUrl, err := u.userRepo.GetUserWebhook(ctx, input.UserId)
 	if err != nil {
-		logger.Error(context.TODO(), "[Disbursement] Failed to get user webhook") // can improve later
+		logger.Error(ctx, "[Disbursement] Failed to get user webhook") // can improve later
 		return
 	}
 
@@ -40,14 +45,14 @@ func (u *disbursementUsecase) HandleDisbursementCompleted(input model.Disburseme
 		ExpectedStatus: http.StatusOK,
 	}
 
-	logger.Info(context.TODO(), fmt.Sprintf("[Disbursement] sending disbursement to client refid=%s body=%v",
+	logger.Info(ctx, fmt.Sprintf("[Disbursement] sending disbursement to client refid=%s body=%v",
 		input.ReferenceId,
 		req.Body,
 	))
 
 	resp, statusCode, err := helper.SendRequest(req)
 	if err != nil {
-		logger.Error(context.TODO(), fmt.Sprintf("[Disbursement] error when sending request=%s statusCode=%d refid=%s",
+		logger.Error(ctx, fmt.Sprintf("[Disbursement] error when sending request=%s statusCode=%d refid=%s",
 			err,
 			statusCode,
 			input.ReferenceId,
@@ -55,16 +60,19 @@ func (u *disbursementUsecase) HandleDisbursementCompleted(input model.Disburseme
 		return
 	}
 
-	logger.Info(context.TODO(), fmt.Sprintf("[Disbursement] sending disbursement to client SUCCESS refid=%s body=%v",
+	logger.Info(ctx, fmt.Sprintf("[Disbursement] sending disbursement to client SUCCESS refid=%s body=%v",
 		input.ReferenceId,
 		string(resp),
 	))
 }
 
 func (u *disbursementUsecase) HandleDisbursementFailed(input model.DisbursementFailedEvent) {
-	webhookUrl, err := u.userRepo.GetUserWebhook(input.UserId)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
+
+	webhookUrl, err := u.userRepo.GetUserWebhook(ctx, input.UserId)
 	if err != nil {
-		logger.Error(context.TODO(), "[Disbursement] Failed to get user webhook") // can improve later
+		logger.Error(ctx, "[Disbursement] Failed to get user webhook") // can improve later
 		return
 	}
 
@@ -79,14 +87,14 @@ func (u *disbursementUsecase) HandleDisbursementFailed(input model.DisbursementF
 		ExpectedStatus: http.StatusOK,
 	}
 
-	logger.Info(context.TODO(), fmt.Sprintf("[Disbursement] sending disbursement to client refid=%s body=%v",
+	logger.Info(ctx, fmt.Sprintf("[Disbursement] sending disbursement to client refid=%s body=%v",
 		input.ReferenceId,
 		req.Body,
 	))
 
 	resp, statusCode, err := helper.SendRequest(req)
 	if err != nil {
-		logger.Error(context.TODO(), fmt.Sprintf("[Disbursement] error when sending request=%s statusCode=%d refid=%s",
+		logger.Error(ctx, fmt.Sprintf("[Disbursement] error when sending request=%s statusCode=%d refid=%s",
 			err,
 			statusCode,
 			input.ReferenceId,
@@ -94,7 +102,7 @@ func (u *disbursementUsecase) HandleDisbursementFailed(input model.DisbursementF
 		return
 	}
 
-	logger.Info(context.TODO(), fmt.Sprintf("[Disbursement] sending disbursement to client SUCCESS refid=%s body=%v",
+	logger.Info(ctx, fmt.Sprintf("[Disbursement] sending disbursement to client SUCCESS refid=%s body=%v",
 		input.ReferenceId,
 		string(resp),
 	))

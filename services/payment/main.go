@@ -61,8 +61,6 @@ func main() {
 		rds,
 		mqConn,
 	)
-	// TODO: make init func?
-	mq.ConsumeDisbursementRequest(mqConn, disbursementUC.HandleDisbursementRequest)
 
 	scheduler := scheduler.NewScheduler(disbursementUC)
 	scheduler.RegisterJobs()
@@ -76,6 +74,16 @@ func main() {
 
 	var wg sync.WaitGroup
 
+	ctx1, cancel1 := context.WithCancel(context.Background())
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// TODO: make init func?
+		mq.ConsumeDisbursementRequest(mqConn, disbursementUC.HandleDisbursementRequest)
+		ctx1.Done()
+	}()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -87,14 +95,14 @@ func main() {
 		}
 	}()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx2, cancel2 := context.WithCancel(context.Background())
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		scheduler.Start()
 		log.Println("Cron scheduler started")
-		<-ctx.Done() // wait for shutdown signal
+		<-ctx2.Done() // wait for shutdown signal
 	}()
 
 	done := make(chan os.Signal, 1)
@@ -102,7 +110,8 @@ func main() {
 	<-done // when ctrl+c is called signal will be sent here
 	log.Println("Shutting down gracefully...")
 
-	cancel()
+	cancel1()
+	cancel2()
 
 	httpShutdownCtx, httpCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer httpCancel()

@@ -6,15 +6,13 @@ const (
 	MIDTRANS_PROVIDER_ID
 )
 
-type Key string
-
 const (
-	JSON_BODY           = "json_body"
-	REQUEST_HEADERS     = "headers"
-	PROVIDER            = "provider"
-	USER_ID             = "user_id"
-	PROCESS_ID      Key = "ProcessID"
-	X_USER_ID           = "X-User-ID"
+	JSON_BODY       = "json_body"
+	REQUEST_HEADERS = "headers"
+	PROVIDER        = "provider"
+	USER_ID         = "user_id"
+	PROCESS_ID      = "ProcessID"
+	X_USER_ID       = "X-User-ID"
 
 	STATUS_PENDING   = "PENDING"
 	STATUS_COMPLETED = "COMPLETED"

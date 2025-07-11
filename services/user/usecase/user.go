@@ -142,14 +142,15 @@ func (u userUsecase) GetUser(
 
 func (u userUsecase) AddWebhook(
 	ctx context.Context,
-	input model.AddWebhookRequest,
+	webhook string,
+	userId int,
 ) model.Error {
-	err := u.userRepo.UpdateUserWebhook(ctx, input)
+	err := u.userRepo.UpdateUserWebhook(ctx, webhook, userId)
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf(
 			"[Add Webhook] update disbursement DB error=%s refid=%d",
 			err,
-			input.UserId,
+			userId,
 		))
 		return model.Error{
 			Code:    http.StatusInternalServerError,

@@ -54,11 +54,11 @@ func (a *ApiHandler) RequestDisbursement(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	userid, _ := strconv.Atoi(r.Header.Get("X-User-ID"))
+	userId, _ := strconv.Atoi(r.Header.Get("X-User-ID"))
 
 	err := mq.PublishDisbursementRequest(a.mqConn,
 		model.DisbursementRequestEvent{
-			UserId:            userid,
+			UserId:            userId,
 			UserReferenceId:   request.UserReferenceId,
 			Amount:            request.Amount,
 			BankCode:          request.BankCode,

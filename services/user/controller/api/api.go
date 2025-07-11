@@ -44,8 +44,8 @@ func HandleRequests(
 	user.HandleFunc("/register", apiModule.RegisterUser)
 	user.HandleFunc("/login", apiModule.LoginUser)
 
-	user.HandleFunc("/{userId}", apiModule.GetUser)
 	user.HandleFunc("/webhook", apiModule.AddWebhook)
+	user.HandleFunc("/internal/{userId}", apiModule.GetUser)
 
 	return router
 }

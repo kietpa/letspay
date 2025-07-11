@@ -2,19 +2,25 @@ package rabbitmq
 
 import (
 	"log"
+	"time"
 
 	"github.com/rabbitmq/amqp091-go"
 )
 
 func Connect(url string) *amqp091.Connection {
-	conn, err := amqp091.Dial(url)
-	failOnError(err, "fail to connect to amqp") // "amqp://guest:guest@localhost:5672/"
+	var conn *amqp091.Connection
+	var err error
 
-	return conn
-}
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Panicf("%s: %s", msg, err)
+	// add some delay because amqp takes some time to start
+	time.Sleep(10 * time.Second)
+	for i := 0; i < 5; i++ {
+		conn, err = amqp091.Dial(url)
+		if err == nil {
+			return conn
+		}
+		log.Printf("🐇 Failed to connect to RabbitMQ: %v. Retrying...", err)
+		time.Sleep(2 * time.Second)
 	}
+	log.Fatalf("❌ Failed to connect to RabbitMQ after retries: %v", err)
+	return nil
 }

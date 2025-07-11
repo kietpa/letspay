@@ -48,12 +48,14 @@ func (u disbursementUsecase) HandleDisbursementRequest(req model.DisbursementReq
 	}, req.UserId)
 	if err.Code != 0 {
 		mq.PublishDisbursementFailed(u.mqConn, model.DisbursementFailedEvent{
+			UserId:             req.UserId,
 			DisbursementDetail: resp,
 		})
 		return
 	}
 
 	mq.PublishDisbursementCompleted(u.mqConn, model.DisbursementCompletedEvent{
+		UserId:             req.UserId,
 		DisbursementDetail: resp,
 	})
 }

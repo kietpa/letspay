@@ -1,15 +1,19 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"letspay/pkg/logger"
+	"letspay/services/api-gateway/model"
 	"net/http"
 	"strconv"
 )
 
 type (
 	UserRepo interface {
-		GetUserWebhook(userId int) (string, error)
+		GetUserWebhook(ctx context.Context, userId int) (string, error)
 	}
 
 	userRepo struct {
@@ -28,21 +32,27 @@ func NewUserRepo(
 	}
 }
 
-// TODO: create get user webhook function in user service
-func (r *userRepo) GetUserWebhook(userId int) (string, error) {
-	url := r.userServiceUrl + "/" + strconv.Itoa(userId)
-	var webhookUrl string
+func (r *userRepo) GetUserWebhook(ctx context.Context, userId int) (string, error) {
+	url := r.userServiceUrl + "/user/internal/" + strconv.Itoa(userId)
+	data := model.GetUserDetail{}
+
+	// for debug & info
+	logger.Info(ctx, fmt.Sprintf("[Get Webhook] url=%v userid=%d", url, userId))
 
 	resp, err := r.httpclient.Get(url)
 	if err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Get Webhook] http get error=%s", err))
 		return "", err
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 
-	if err := json.Unmarshal(body, &webhookUrl); err != nil {
+	if err := json.Unmarshal(body, &data); err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Get Webhook] unmarshal error=%s", err))
 		return "", err
 	}
 
-	return "", nil
+	logger.Info(ctx, fmt.Sprintf("[Get Webhook] unmarshalled body=%+v", data))
+
+	return data.Webhook, nil
 }

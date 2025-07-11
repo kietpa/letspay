@@ -38,7 +38,6 @@ type (
 	}
 
 	AddWebhookRequest struct {
-		UserId  int    `json:"user_id"`
 		Webhook string `json:"webhook"`
 	}
 )

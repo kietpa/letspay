@@ -18,6 +18,7 @@ func InitRouting(
 	user := router.PathPrefix("/user").Subrouter()
 	user.HandleFunc("/register", handler.NewReverseProxy(userUrl))
 	user.HandleFunc("/login", handler.NewReverseProxy(userUrl))
+	user.Handle("/webhook", auth.AuthMiddleware(handler.NewReverseProxy(userUrl)))
 
 	disbursement := router.PathPrefix(constants.DISBURSEMENT).Subrouter()
 	disbursement.Use(auth.AuthMiddleware)

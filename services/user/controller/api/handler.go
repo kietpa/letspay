@@ -109,16 +109,17 @@ func (m *ApiModule) GetUser(w http.ResponseWriter, r *http.Request) {
 
 		response, err = m.userApi.GetUser(ctx, param)
 		if err.Code != 0 {
+			logger.Error(ctx, fmt.Sprintf("[Get User] error=%v", err.Message))
 			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, "[Get User] method not allowed")
+		logger.Error(ctx, "[Get User] method not allowed: "+r.Method)
 		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	helper.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response.Data)
 }
 
 func (m *ApiModule) AddWebhook(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +133,7 @@ func (m *ApiModule) AddWebhook(w http.ResponseWriter, r *http.Request) {
 		param := make(map[string]string)
 		body, _ := io.ReadAll(r.Body)
 		param[constants.JSON_BODY] = string(body)
+		param[constants.USER_ID] = r.Header.Get("X-User-ID")
 
 		response, err = m.userApi.AddWebhook(ctx, param)
 		if err.Code != 0 {

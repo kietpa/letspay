@@ -26,13 +26,11 @@ type DisbursementRequestEvent struct {
 // }
 
 type DisbursementCompletedEvent struct {
+	UserId int `json:"user_id"`
 	DisbursementDetail
 }
 
 type DisbursementFailedEvent struct {
-	DisbursementDetail
-}
-
-type DisbursementGetEvent struct {
+	UserId int `json:"user_id"`
 	DisbursementDetail
 }

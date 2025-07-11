@@ -28,7 +28,8 @@ type (
 		) (dto.User, error)
 		UpdateUserWebhook(
 			ctx context.Context,
-			input model.AddWebhookRequest,
+			webhook string,
+			userId int,
 		) error
 	}
 )

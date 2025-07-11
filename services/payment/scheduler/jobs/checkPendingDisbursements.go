@@ -26,7 +26,7 @@ func (j *CheckPendingDisbursementsJob) Run() {
 
 	ctx = context.WithValue(ctx, constants.PROCESS_ID, util.GenerateRandomHex())
 
-	logger.Info(ctx, fmt.Sprintf("[Disbursement Scheduler] starting disbursement scheduler..."))
+	logger.Info(ctx, "[Disbursement Scheduler] starting disbursement scheduler...")
 	updateCount, err := j.disbursementUsecase.CheckAndUpdatePendingDisbursements(ctx)
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler] failed to run scheduler err=%s", err))

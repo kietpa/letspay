@@ -53,7 +53,8 @@ func (r *userRepo) GetUserByEmail(
 	name,
 	email,
 	password,
-	created_at
+	created_at,
+	webhook
 	FROM users
 	WHERE email = $1`
 
@@ -63,6 +64,7 @@ func (r *userRepo) GetUserByEmail(
 		&resp.Email,
 		&resp.HashedPassword,
 		&resp.CreatedAt,
+		&resp.Webhook,
 	)
 
 	return resp, err
@@ -78,7 +80,8 @@ func (r *userRepo) GetUserById(
 	name,
 	email,
 	password,
-	created_at
+	created_at,
+	webhook
 	FROM users
 	WHERE id = $1`
 
@@ -88,6 +91,7 @@ func (r *userRepo) GetUserById(
 		&resp.Email,
 		&resp.HashedPassword,
 		&resp.CreatedAt,
+		&resp.Webhook,
 	)
 
 	return resp, err
@@ -95,15 +99,16 @@ func (r *userRepo) GetUserById(
 
 func (r *userRepo) UpdateUserWebhook(
 	ctx context.Context,
-	input model.AddWebhookRequest,
+	webhook string,
+	userId int,
 ) error {
 	query := `UPDATE users
 	SET webhook = $1
 	WHERE id = $2`
 
 	_, err := r.db.Exec(ctx, query,
-		input.Webhook,
-		input.UserId,
+		webhook,
+		userId,
 	)
 
 	return err
