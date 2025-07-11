@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"letspay/pkg/db"
+	"letspay/pkg/rabbitmq"
 	"letspay/services/payment/common/constants"
 	"letspay/services/payment/config"
 	"letspay/services/payment/controller/api"
+	"letspay/services/payment/mq"
 	"letspay/services/payment/repository/database"
 	"letspay/services/payment/repository/provider"
 	"letspay/services/payment/repository/provider/midtrans"
@@ -27,6 +29,8 @@ func main() {
 	rds := db.InitRedis(cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.Password)
 	db := db.InitDB()
 	defer db.Close()
+
+	mqConn := rabbitmq.Connect(cfg.RabbitMqUrl)
 
 	disbursementRepo := database.NewDisbursementRepo(db)
 	bankRepo := database.NewBankRepo(db)
@@ -50,12 +54,16 @@ func main() {
 		constants.MIDTRANS_PROVIDER_ID: midtransRepo,
 	}
 
-	disbursementUC := usecase.NewDisbursementUsecase(disbursementRepo, providerRepo, bankRepo, rds)
+	disbursementUC := usecase.NewDisbursementUsecase(
+		disbursementRepo,
+		providerRepo,
+		bankRepo,
+		rds,
+		mqConn,
+	)
 
 	scheduler := scheduler.NewScheduler(disbursementUC)
 	scheduler.RegisterJobs()
-
-	// TODO: mssg queue
 
 	router := api.HandleRequests(cfg, disbursementUC)
 
@@ -65,6 +73,16 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
+
+	ctx1, cancel1 := context.WithCancel(context.Background())
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// TODO: make init func?
+		mq.ConsumeDisbursementRequest(mqConn, disbursementUC.HandleDisbursementRequest)
+		ctx1.Done()
+	}()
 
 	wg.Add(1)
 	go func() {
@@ -77,14 +95,14 @@ func main() {
 		}
 	}()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx2, cancel2 := context.WithCancel(context.Background())
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		scheduler.Start()
 		log.Println("Cron scheduler started")
-		<-ctx.Done() // wait for shutdown signal
+		<-ctx2.Done() // wait for shutdown signal
 	}()
 
 	done := make(chan os.Signal, 1)
@@ -92,7 +110,8 @@ func main() {
 	<-done // when ctrl+c is called signal will be sent here
 	log.Println("Shutting down gracefully...")
 
-	cancel()
+	cancel1()
+	cancel2()
 
 	httpShutdownCtx, httpCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer httpCancel()

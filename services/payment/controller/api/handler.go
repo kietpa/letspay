@@ -50,16 +50,16 @@ func (m *ApiModule) GetDisbursement(w http.ResponseWriter, r *http.Request) {
 
 		response, err = m.disbursementApi.GetDisbursement(ctx, InputParams)
 		if err.Code != 0 {
-			controller.RespondWithError(w, err.Code, err)
+			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Get Disbursement] method not allowed"))
-		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		logger.Error(ctx, "[Callback Disbursement] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	controller.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response)
 
 }
 
@@ -91,16 +91,16 @@ func (m *ApiModule) CreateDisbursement(w http.ResponseWriter, r *http.Request) {
 		logger.Info(ctx, fmt.Sprintf("[Create Disbursement] request received from %s", helper.GetIP(r)))
 		response, err = m.disbursementApi.CreateDisbursement(ctx, param)
 		if err.Code != 0 {
-			controller.RespondWithError(w, err.Code, err)
+			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Create Disbursement] method not allowed"))
-		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		logger.Error(ctx, "[Callback Disbursement] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	controller.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response)
 }
 
 func (m *ApiModule) CallbackDisbursement(w http.ResponseWriter, r *http.Request) {
@@ -124,14 +124,14 @@ func (m *ApiModule) CallbackDisbursement(w http.ResponseWriter, r *http.Request)
 
 		response, err = m.disbursementApi.CallbackDisbursement(ctx, param)
 		if err.Code != 0 {
-			controller.RespondWithError(w, err.Code, err)
+			helper.RespondWithError(w, err.Code, err)
 			return
 		}
 	default:
-		logger.Error(ctx, fmt.Sprintf("[Callback Disbursement] method not allowed"))
-		controller.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
+		logger.Error(ctx, "[Callback Disbursement] method not allowed")
+		helper.RespondWithError(w, http.StatusMethodNotAllowed, notAllowedError)
 		return
 	}
 
-	controller.RespondWithJSON(w, http.StatusOK, response)
+	helper.RespondWithJSON(w, http.StatusOK, response)
 }

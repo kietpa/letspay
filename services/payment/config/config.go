@@ -48,5 +48,6 @@ func InitConfig() model.AppConfig {
 			Port:     os.Getenv("REDIS_PORT"),
 			Password: os.Getenv("REDIS_PASSWORD"),
 		},
+		RabbitMqUrl: os.Getenv("RABBITMQ_URL"),
 	}
 }

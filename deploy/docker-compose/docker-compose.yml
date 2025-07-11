@@ -37,6 +37,7 @@ services:
     depends_on:
       - user-service
       - payment-service
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -55,6 +56,7 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -73,6 +75,7 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     env_file:
       - ../../.env
     labels:
@@ -106,6 +109,17 @@ services:
       - ../../deploy/config/grafana.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     networks:
       - monitoring
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - db
 
 networks:
   db:

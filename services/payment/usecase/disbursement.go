@@ -9,6 +9,7 @@ import (
 	"letspay/pkg/util"
 	"letspay/services/payment/common/constants"
 	"letspay/services/payment/model"
+	"letspay/services/payment/mq"
 	"letspay/services/payment/repository/database"
 	"letspay/services/payment/repository/provider"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func NewDisbursementUsecase(
@@ -24,13 +26,38 @@ func NewDisbursementUsecase(
 	providerRepo map[int]provider.ProviderRepo,
 	bankRepo database.BankRepo,
 	redisRepo *db.RedisClient,
+	mqConn *amqp.Connection,
 ) DisbursementUsecase {
 	return &disbursementUsecase{
 		disbursementRepo: disbursementRepo,
 		providerRepo:     providerRepo,
 		bankRepo:         bankRepo,
 		redisRepo:        redisRepo,
+		mqConn:           mqConn,
 	}
+}
+
+func (u disbursementUsecase) HandleDisbursementRequest(req model.DisbursementRequestEvent) {
+	resp, err := u.CreateDisbursement(context.TODO(), model.CreateDisbursementRequest{
+		UserReferenceId:   req.UserReferenceId,
+		Amount:            req.Amount,
+		BankCode:          req.BankCode,
+		BankAccountNumber: req.BankAccountNumber,
+		BankAccountName:   req.BankAccountName,
+		Description:       req.Description,
+	}, req.UserId)
+	if err.Code != 0 {
+		mq.PublishDisbursementFailed(u.mqConn, model.DisbursementFailedEvent{
+			UserId:             req.UserId,
+			DisbursementDetail: resp,
+		})
+		return
+	}
+
+	mq.PublishDisbursementCompleted(u.mqConn, model.DisbursementCompletedEvent{
+		UserId:             req.UserId,
+		DisbursementDetail: resp,
+	})
 }
 
 func (u disbursementUsecase) GetDisbursement(
@@ -334,7 +361,7 @@ func (u disbursementUsecase) CallbackDisbursement(
 func (u disbursementUsecase) CallbackValidateToken(
 	ctx context.Context, headers http.Header, provider string,
 ) bool {
-	logger.Info(ctx, fmt.Sprintf("[Validate Token] validating token"))
+	logger.Info(ctx, "[Validate Token] validating token")
 	switch provider {
 	case "xendit":
 		return u.providerRepo[constants.XENDIT_PROVIDER_ID].ValidateCallbackToken(
@@ -349,7 +376,7 @@ func (u disbursementUsecase) CallbackValidateToken(
 func (u disbursementUsecase) CheckAndUpdatePendingDisbursements(
 	ctx context.Context,
 ) (int, error) {
-	logger.Info(ctx, fmt.Sprintf("[Disbursement Scheduler] getting pending disbursements from DB"))
+	logger.Info(ctx, "[Disbursement Scheduler] getting pending disbursements from DB")
 	disbursements, err := u.disbursementRepo.GetPendingDisbursements(ctx)
 	if err != nil {
 		logger.Error(ctx, fmt.Sprintf("[Disbursement Scheduler] get pending disbursements DB error=%s", err))

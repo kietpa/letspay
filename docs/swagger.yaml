@@ -23,12 +23,12 @@ definitions:
         maxLength: 15
         type: string
     required:
-    - amount
-    - bank_account_name
-    - bank_account_number
-    - bank_code
-    - description
-    - user_reference_id
+      - amount
+      - bank_account_name
+      - bank_account_number
+      - bank_code
+      - description
+      - user_reference_id
     type: object
   model.DisbursementDetail:
     properties:
@@ -59,7 +59,7 @@ definitions:
         type: integer
       errors:
         items:
-          $ref: '#/definitions/helper.ValidationError'
+          $ref: "#/definitions/helper.ValidationError"
         type: array
       message:
         type: string
@@ -71,8 +71,8 @@ definitions:
       password:
         type: string
     required:
-    - email
-    - password
+      - email
+      - password
     type: object
   model.LoginUserResponse:
     properties:
@@ -89,15 +89,25 @@ definitions:
       password:
         type: string
     required:
-    - email
-    - name
-    - password
+      - email
+      - name
+      - password
     type: object
   model.UserDetail:
     properties:
       email:
         type: string
       name:
+        type: string
+    type: object
+  model.AddWebhookRequest:
+    properties:
+      webhook:
+        type: string
+    type: object
+  model.AddWebhookResponse:
+    properties:
+      message:
         type: string
     type: object
 host: localhost:8080
@@ -116,144 +126,179 @@ paths:
   /disbursement:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Create a disbursement transaction
       parameters:
-      - description: JWT Token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: The input body
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/model.CreateDisbursementRequest'
+        - description: JWT Token
+          in: header
+          name: Authorization
+          required: true
+          type: string
+        - description: The input body
+          in: body
+          name: data
+          required: true
+          schema:
+            $ref: "#/definitions/model.CreateDisbursementRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.DisbursementDetail'
+            $ref: "#/definitions/model.DisbursementDetail"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
       summary: Create Disbursement
       tags:
-      - Disbursement
+        - Disbursement
   /disbursement/{referenceid}:
     get:
       consumes:
-      - application/json
+        - application/json
       description: Get disbursement transaction by reference ID
       parameters:
-      - description: reference id
-        in: path
-        name: ID
-        required: true
-        type: integer
-      - description: JWT Token
-        in: header
-        name: Authorization
-        required: true
-        type: string
+        - description: reference id
+          in: path
+          name: referenceid
+          required: true
+          type: integer
+        - description: JWT Token
+          in: header
+          name: Authorization
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: '#/definitions/model.DisbursementDetail'
+              $ref: "#/definitions/model.DisbursementDetail"
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
       summary: Get Disbursement
       tags:
-      - Disbursement
+        - Disbursement
   /user/login:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Login and receive an access token
       parameters:
-      - description: The input body
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/model.LoginUserRequest'
+        - description: The input body
+          in: body
+          name: data
+          required: true
+          schema:
+            $ref: "#/definitions/model.LoginUserRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.LoginUserResponse'
+            $ref: "#/definitions/model.LoginUserResponse"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
       summary: Login
       tags:
-      - User
+        - User
   /user/register:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Register a user
       parameters:
-      - description: The input body
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/model.RegisterUserRequest'
+        - description: The input body
+          in: body
+          name: data
+          required: true
+          schema:
+            $ref: "#/definitions/model.RegisterUserRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.UserDetail'
+            $ref: "#/definitions/model.UserDetail"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/model.Error'
+            $ref: "#/definitions/model.Error"
       summary: Register
       tags:
-      - User
+        - User
+  /user/webhook:
+    post:
+      consumes:
+        - application/json
+      description: Add a user's webhook
+      parameters:
+        - description: The input body
+          in: body
+          name: data
+          required: true
+          schema:
+            $ref: "#/definitions/model.AddWebhookRequest"
+        - description: JWT Token
+          in: header
+          name: Authorization
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/model.AddWebhookResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/model.Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/model.Error"
+      summary: Add Webhook
+      tags:
+        - User
 swagger: "2.0"

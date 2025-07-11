@@ -133,7 +133,7 @@ func (p *providerRepo) ExecuteDisbursement(
 	}
 
 	// midtrans uses lowercase
-	if output.Status == "queued" {
+	if output.Status == "queued" || output.Status == "prcoessed" {
 		output.Status = "PENDING"
 	} else {
 		output.Status = strings.ToUpper(output.Status)
@@ -179,7 +179,7 @@ func (p *providerRepo) GetDisbursementStatus(
 	}
 
 	// midtrans uses lowercase
-	if resp.Status == "queued" {
+	if resp.Status == "queued" || resp.Status == "prcoessed" {
 		resp.Status = "PENDING"
 	} else {
 		resp.Status = strings.ToUpper(resp.Status)

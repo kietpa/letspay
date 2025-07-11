@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -107,4 +108,19 @@ func GetIP(r *http.Request) string {
 		return r.RemoteAddr
 	}
 	return host
+}
+
+func RespondWithJSON(w http.ResponseWriter, statusCode int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	if data != nil {
+		if err := json.NewEncoder(w).Encode(data); err != nil {
+			log.Printf("Error encoding JSON: %v", err)
+		}
+	}
+}
+
+func RespondWithError(w http.ResponseWriter, statusCode int, errors any) {
+	RespondWithJSON(w, statusCode, errors)
 }

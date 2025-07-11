@@ -115,3 +115,48 @@ func (u userUsecase) LoginUser(
 		Token: token,
 	}, model.Error{}
 }
+
+func (u userUsecase) GetUser(
+	ctx context.Context,
+	userId int,
+) (model.GetUserDetail, model.Error) {
+	user, err := u.userRepo.GetUserById(ctx, userId)
+	if err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Get User] Get user DB error=%s id=%d",
+			err,
+			userId,
+		))
+		return model.GetUserDetail{}, model.Error{
+			Code:    http.StatusNotFound,
+			Message: "User id not found",
+		}
+	}
+
+	return model.GetUserDetail{
+		UserId:  userId,
+		Name:    user.Name,
+		Email:   user.Email,
+		Webhook: user.Webhook,
+	}, model.Error{}
+}
+
+func (u userUsecase) AddWebhook(
+	ctx context.Context,
+	webhook string,
+	userId int,
+) model.Error {
+	err := u.userRepo.UpdateUserWebhook(ctx, webhook, userId)
+	if err != nil {
+		logger.Error(ctx, fmt.Sprintf(
+			"[Add Webhook] update disbursement DB error=%s refid=%d",
+			err,
+			userId,
+		))
+		return model.Error{
+			Code:    http.StatusInternalServerError,
+			Message: constants.INTERNAL_ERROR_MESSAGE,
+		}
+	}
+
+	return model.Error{}
+}

@@ -2,15 +2,13 @@ package usecase
 
 import (
 	"context"
-	"letspay/pkg/db"
 	"letspay/services/user/model"
 	"letspay/services/user/repository/database"
 )
 
 type (
 	userUsecase struct {
-		userRepo  database.UserRepo
-		redisRepo *db.RedisClient
+		userRepo database.UserRepo
 	}
 
 	UserUsecase interface {
@@ -20,5 +18,13 @@ type (
 		LoginUser(
 			ctx context.Context, loginUserRequest model.LoginUserRequest,
 		) (model.LoginUserResponse, model.Error)
+		GetUser(
+			ctx context.Context, userId int,
+		) (model.GetUserDetail, model.Error)
+		AddWebhook(
+			ctx context.Context,
+			webhook string,
+			userId int,
+		) model.Error
 	}
 )

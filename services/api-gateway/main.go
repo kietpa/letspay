@@ -3,7 +3,12 @@ package main
 import (
 	"context"
 	"letspay/pkg/auth"
+	"letspay/pkg/rabbitmq"
+	"letspay/services/api-gateway/handler"
+	"letspay/services/api-gateway/mq"
+	"letspay/services/api-gateway/repository"
 	"letspay/services/api-gateway/routing"
+	"letspay/services/api-gateway/usecase"
 	"log"
 	"net/http"
 	"os"
@@ -12,12 +17,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	// to debug, we have to rebuild from scratch with docker rmi letspay-app
+	// TODO: create config to load env and urls
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Failed to load env variables, err=%v", err)
@@ -25,14 +31,32 @@ func main() {
 	}
 
 	auth.SetSecret(os.Getenv("JWT_SECRET"))
+	mqConn := rabbitmq.Connect(os.Getenv("RABBITMQ_URL"))
+	val := validator.New()
 
-	// TODO: mssg queue
+	// for internal http calls we use one client
+	// TODO: replace with gRPC later?
+	httpclient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	userRepo := repository.NewUserRepo(
+		os.Getenv("USER_URL"),
+		httpclient,
+	)
+
+	disbursementUC := usecase.NewDisbursementUsecase(userRepo)
+	mq.InitConsumers(mqConn, disbursementUC)
+
+	// handler sends messages to queues
+	handler := handler.NewApiHandler(mqConn, val)
 
 	router := mux.NewRouter().StrictSlash(true)
 	routing.InitRouting(
 		router,
 		os.Getenv("USER_URL"),
 		os.Getenv("PAYMENT_URL"),
+		handler,
 	)
 
 	server := &http.Server{
@@ -56,6 +80,7 @@ func main() {
 	}()
 
 	done := make(chan os.Signal, 1)
+	// done blocks untl a value is sent to done
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-done // when ctrl+c is called signal will be sent here
 	log.Println("Shutting down gracefully...")

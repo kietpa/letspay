@@ -7,6 +7,8 @@ import (
 	"letspay/services/payment/repository/database"
 	"letspay/services/payment/repository/provider"
 	"net/http"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type (
@@ -15,6 +17,7 @@ type (
 		providerRepo     map[int]provider.ProviderRepo
 		bankRepo         database.BankRepo
 		redisRepo        *db.RedisClient
+		mqConn           *amqp.Connection
 	}
 
 	DisbursementUsecase interface {
@@ -33,5 +36,6 @@ type (
 		CheckAndUpdatePendingDisbursements(
 			ctx context.Context,
 		) (int, error)
+		HandleDisbursementRequest(req model.DisbursementRequestEvent)
 	}
 )

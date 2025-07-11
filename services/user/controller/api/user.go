@@ -11,6 +11,7 @@ import (
 	"letspay/services/user/model"
 	"letspay/services/user/usecase"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -102,6 +103,67 @@ func (a *userApi) LoginUser(
 
 	response.Status = http.StatusOK
 	response.Data = userResponse
+
+	return response, model.Error{}
+}
+
+func (a *userApi) GetUser(
+	ctx context.Context, param map[string]string,
+) (controller.Data, model.Error) {
+	response := controller.Data{}
+	userId, _ := strconv.Atoi(param[constants.USER_ID])
+
+	logger.Info(ctx, fmt.Sprintf("[Get User] Getting user userid=%d", userId))
+
+	user, err := a.userUC.GetUser(ctx, userId)
+	if err.Code != 0 { // 0 = success
+		return controller.Data{}, err
+	}
+
+	logger.Info(ctx, fmt.Sprintf(
+		"[Get User] Successfully retrieved user refid=%d user=%+v",
+		userId,
+		user,
+	))
+
+	response.Status = http.StatusOK
+	response.Data = user
+
+	return response, model.Error{}
+}
+
+func (a *userApi) AddWebhook(
+	ctx context.Context, param map[string]string,
+) (controller.Data, model.Error) {
+	response := controller.Data{}
+	request := model.AddWebhookRequest{}
+
+	if err := json.Unmarshal([]byte(param[constants.JSON_BODY]), &request); err != nil {
+		logger.Error(ctx, fmt.Sprintf("[Add Webhook] unmarshal error=%s", err))
+		return controller.Data{}, model.Error{
+			Code:    http.StatusBadRequest,
+			Message: constants.INVALID_JSON_BODY,
+		}
+	}
+
+	userId, _ := strconv.Atoi(param[constants.USER_ID])
+
+	logger.Info(ctx, fmt.Sprintf("[Add Webhook] adding user webhook=%s", request.Webhook))
+
+	err := a.userUC.AddWebhook(ctx, request.Webhook, userId)
+	if err.Code != 0 {
+		return controller.Data{}, err
+	}
+
+	logger.Info(ctx, fmt.Sprintf("[Add Webhook] Successfully added webhook=%+v userid=%d",
+		request.Webhook,
+		userId,
+	))
+
+	response.Status = http.StatusOK
+	response.Data = map[string]string{
+		"message": "Successfully registered webhook",
+	}
 
 	return response, model.Error{}
 }

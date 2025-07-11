@@ -4,9 +4,10 @@ type (
 	// TODO: add error
 
 	AppConfig struct {
-		Server   Server
-		Provider map[int]Provider
-		Redis    Redis
+		Server      Server
+		Provider    map[int]Provider
+		Redis       Redis
+		RabbitMqUrl string
 	}
 
 	Provider struct {
